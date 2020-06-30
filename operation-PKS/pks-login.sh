@@ -13,7 +13,10 @@ USER_PASSWORD=$2
 CERTIFICATE_PATH=$YOUR_LOCAL_PATH/api.crt
 
 # with CA certificate
-tkgi login -a $PKS_API -u $USER_ID -p $USER_PASSWORD --ca-cert $CERTIFICATE_PATH
+tkgi login -a $PKS_API -u $USER_ID -p$USER_PASSWORD --ca-cert $CERTIFICATE_PATH
 
 # Without CA certificate
-tkgi login -a $PKS_API -u $USER_ID -p $USER_PASSWORD -k
+tkgi login -a $PKS_API -u $USER_ID -p$USER_PASSWORD -k
+
+security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain ~/Downloads/ca.crt
+
