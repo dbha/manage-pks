@@ -1,0 +1,219 @@
+
+# Bosh Commands
+
+ubuntu@opsmgr-02:~$ bosh tasks -ar
+Using environment '172.16.1.11' as client 'ops_manager'
+
+ID   State       Started At                    Finished At                   User         Deployment                                             Description               Result
+393  done        Wed Jul  1 09:30:00 UTC 2020  Wed Jul  1 09:30:01 UTC 2020  scheduler    -                                                      clean up local dns blobs  Deleted 2 dns blob(s) created before 2020-07-01 08:30:00 +0000
+392  done        Wed Jul  1 09:29:15 UTC 2020  Wed Jul  1 09:29:15 UTC 2020  ops_manager  pivotal-container-service-8ac1fa94cb5049a1bd82         retrieve vm-stats         -
+391  done        Wed Jul  1 09:29:15 UTC 2020  Wed Jul  1 09:29:15 UTC 2020  ops_manager  service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20  retrieve vm-stats         -
+390  done        Wed Jul  1 09:29:14 UTC 2020  Wed Jul  1 09:29:15 UTC 2020  ops_manager  service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7  retrieve vm-stats         -
+389  done        Wed Jul  1 09:26:51 UTC 2020  Wed Jul  1 09:26:52 UTC 2020  ops_manager  pivotal-container-service-8ac1fa94cb5049a1bd82         retrieve vm-stats
+
+ubuntu@opsmgr-02:~$ bosh releases
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Name                      Version           Commit Hash
+backup-and-restore-sdk    1.17.0*           b77b8f0
+bosh-dns                  1.17.0*           c10f409
+bosh-metric-sink          0.0.15*           7e4c283
+bpm                       1.1.1*            7add626
+cfcr-etcd                 1.7.0-build.23*   bdb8bef
+docker                    1.7.0-build.9*    8494075
+kubo                      1.7.0-build.83*   6bfd6af
+kubo-service-adapter      1.7.0-build.483*  8394c286
+kubo-windows              1.7.0-build.38*   4d898fa
+nsx-cf-cni                2.5.1.15287458*   318d3a8+
+on-demand-service-broker  0.38.0*           6575eda
+pks-api                   1.7.0-build.483*  36f9d691
+
+ubuntu@opsmgr-02:~$ bosh deployments | more
+pivotal-container-service-8ac1fa94cb5049a1bd82       	backup-and-restore-sdk/1.17.0       	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	-
+                                                     	bosh-dns/1.17.0
+ubuntu@opsmgr-02:~$ bosh runtime-config --name ops_manager_dns_runtime
+Using environment '172.16.1.11' as client 'ops_manager'
+
+---
+addons:
+- include:
+    stemcell:
+    - os: ubuntu-trusty
+    - os: ubuntu-xenial
+  jobs:
+  - name: bosh-dns
+    properties:
+
+
+
+ubuntu@opsmgr-02:~$ bosh disks --orphaned
+Using environment '172.16.1.11' as client 'ops_manager'
+Disk CID                                   Size    Deployment                                             Instance                                                        AZ       Orphaned At
+disk-7cb82a0e-196e-40b6-a934-ca97649f6244  10 GiB  pivotal-container-service-8ac1fa94cb5049a1bd82         pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09                     pks-az1  Wed Jul  1 09:28:36 UTC 2020
+disk-064577e9-e7aa-410b-a7a6-128129d79dcc  10 GiB  pivotal-container-service-8ac1fa94cb5049a1bd82         pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804  pks-az1  Wed Jul  1 09:19:44 UTC 2020
+disk-5cd11caf-7284-45f5-b824-1495266506dc  50 GiB  service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20  worker/b4cf1068-e5b4-4eb4-b7e1-ec2579871db7                     pks-az3  Wed Jul  1 07:26:41 UTC 2020
+
+ubuntu@opsmgr-02:~$ bosh orphan-disk disk-83a5d66c-7e85-45fc-9184-d421868875e0
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Continue? [yN]: y
+
+Task 413
+
+ubuntu@opsmgr-02:~$ bosh task --debug | more
+I, [2020-07-01T10:15:40.535914 #18] [0x2ae784b44254]  INFO -- TaskHelper: Director Version: 270.11.1
+I, [2020-07-01T10:15:40.535977 #18] [0x2ae784b44254]  INFO -- TaskHelper: Enqueuing task: 417
+I, [2020-07-01T10:15:41.334339 #5936] []  INFO -- DirectorJobRunner: Looking for task with task id 417
+D, [2020-07-01T10:15:41.337316 #5936] [] DEBUG -- DirectorJobRunner: (0.000531s) (conn: 47428832312000) SELECT * FROM "tasks" WHERE "id" = 417
+I, [2020-07-01T10:15:41.338618 #5936] []  INFO -- DirectorJobRunner: Found task #<Bosh::Director::Models::Task @values={:id=>417, :state=>"processing", :timestamp=>2020-07-01 10:15:40 UTC, :description=>"create deploy
+ment", :result=>nil, :output=>"/var/vcap/store/director/tasks/417", :checkpoint_time=>2020-07-01 10:15:40 UTC, :type=>"update_deployment", :username=>"pivotal-container-service-8ac1fa94cb5049a1bd82", :deployment_name=
+>"service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20", :started_at=>nil, :event_output=>"", :result_output=>"", :context_id=>"c271b0d4-db96-4e78-a8a8-a88ecdb668b8"}>
+I, [2020-07-01T10:15:41.338737 #5936] []  INFO -- DirectorJobRunner: Running from worker 'worker_5' on director/0409df9c-7014-431d-44b7-52c47417868d (127.0.0.1)
+I, [2020-07-01T10:15:41.338796 #5936] []  INFO -- DirectorJobRunner: Starting task: 417
+I, [2020-07-01T10:15:41.338866 #5936] [task:417]  INFO -- DirectorJobRunner: Creating job
+
+#Deleting all orphaned disks
+ubuntu@opsmgr-02:~$ for disk in `bosh disks --orphaned | cut -f 1`; do bosh delete-disk $disk -n; done
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 419
+
+Task 419 | 10:20:21 | Deleting orphaned disks: Deleting orphaned disk disk-7cb82a0e-196e-40b6-a934-ca97649f6244 (00:00:20)
+
+Task 419 Started  Wed Jul  1 10:20:21 UTC 2020
+Task 419 Finished Wed Jul  1 10:20:41 UTC 2020
+Task 419 Duration 00:00:20
+Task 419 done
+
+Succeeded
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 420
+
+Task 420 | 10:20:43 | Deleting orphaned disks: Deleting orphaned disk disk-064577e9-e7aa-410b-a7a6-128129d79dcc (00:00:19)
+
+Task 420 Started  Wed Jul  1 10:20:43 UTC 2020
+Task 420 Finished Wed Jul  1 10:21:02 UTC 2020
+Task 420 Duration 00:00:19
+Task 420 done
+
+Succeeded
+
+# bosh clean-up --all
+ubuntu@opsmgr-02:~$ bosh clean-up --all
+
+# delete-deployment
+ubuntu@opsmgr-02:~$ bosh delete-deployment -d service-instance_d4ef8c4d-36c9-460f-bb1e-5235f612c0a4
+
+Task 1832 error
+
+Deleting deployment 'service-instance_d4ef8c4d-36c9-460f-bb1e-5235f612c0a4':
+
+  Expected task '1832' to succeed but state is 'error'
+
+# delete-deployment with --force
+ubuntu@opsmgr-02:~$ bosh delete-deployment -d service-instance_d4ef8c4d-36c9-460f-bb1e-5235f612c0a4 --force
+
+# ps instances
+ubuntu@opsmgr-02:~$ bosh instances -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d --ps
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 473. Done
+
+Deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Instance                                           Process                  Process State  AZ       IPs         Deployment
+apply-addons/c5b13d6e-9361-44d7-876b-95d6e108090a  -                        -              pks-az1  -           service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+master/f2c4d8e5-84b1-4217-9296-618134695808        -                        running        pks-az1  172.28.3.2  service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+~                                                  blackbox                 running        -        -           -
+~                                                  bosh-dns                 running        -        -           -
+~                                                  bosh-dns-healthcheck     running        -        -           -
+~                                                  bosh-dns-resolvconf      running        -        -           -
+~                                                  etcd                     running        -        -           -
+~                                                  kube-apiserver           running        -        -           -
+~                                                  kube-controller-manager  running        -        -           -
+~                                                  kube-scheduler           running        -        -           -
+~                                                  ncp                      running        -        -           -
+~                                                  system-metrics-agent     running        -        -           -
+worker/d592b339-8ecb-4ccb-8514-9669b1d9f260        -                        running        pks-az1  172.28.3.3  service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+~                                                  blackbox                 running        -        -           -
+~                                                  bosh-dns                 running        -        -           -
+~                                                  bosh-dns-healthcheck     running        -        -           -
+~                                                  bosh-dns-resolvconf      running        -        -           -
+~                                                  docker                   running        -        -           -
+~                                                  kube-proxy               running        -        -           -
+~                                                  kubelet                  running        -        -           -
+~                                                  nsx-kube-proxy           running        -        -           -
+~                                                  nsx-node-agent           running        -        -           -
+~                                                  ovs-vswitchd             running        -        -           -
+~                                                  ovsdb-server             running        -        -           -
+~                                                  system-metrics-agent     running        -        -           -
+
+3 instances
+
+Succeeded
+
+
+# bosh logs
+ubuntu@opsmgr-02:~$ bosh logs -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Task 472
+
+Task 472 | 10:45:50 | Fetching logs for master/f2c4d8e5-84b1-4217-9296-618134695808 (0): Finding and packing log files
+Task 472 | 10:45:50 | Fetching logs for worker/d592b339-8ecb-4ccb-8514-9669b1d9f260 (0): Finding and packing log files (00:00:01)
+Task 472 | 10:45:51 | Fetching logs for master/f2c4d8e5-84b1-4217-9296-618134695808 (0): Finding and packing log files (00:00:01)
+Task 472 | 10:45:51 | Fetching group of logs: Packing log files together
+
+Task 472 Started  Wed Jul  1 10:45:50 UTC 2020
+Task 472 Finished Wed Jul  1 10:45:51 UTC 2020
+Task 472 Duration 00:00:01
+Task 472 done
+
+Downloading resource 'f119dee8-7285-4cd9-8c81-f1682bd521eb' to '/home/ubuntu/service-instance_4fb0cf25-c690-4c27-8611-69742778a44d-20200701-104551-521952601.tgz'...
+
+                                                                           0.00%
+Succeeded
+
+ubuntu@opsmgr-02:~$ ls -lrt
+total 1360
+-rw------- 1 ubuntu ubuntu 1361387 Jul  1 10:45 service-instance_4fb0cf25-c690-4c27-8611-69742778a44d-20200701-104551-521952601.tgz
+
+# instance details
+ubuntu@opsmgr-02:~$ bosh instances --details
+Using environment '172.16.1.11' as client 'ops_manager'
+Task 485
+Task 484
+Deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+Instance                                                        Process State  AZ       IPs          Deployment                                      State    VM CID                                   VM Type     Disk CIDs                                  Agent ID                              Index  Bootstrap  Ignore
+pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804  running        pks-az1  172.16.2.12  pivotal-container-service-8ac1fa94cb5049a1bd82  started  vm-70ea2350-a297-44aa-a6fe-269fb378473b  large.disk  disk-5a56e55d-3369-44eb-acc6-4b35d9a58c11  279c1515-80af-4f02-9887-2c9dfa3b74cd  0      true       false
+pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09                     running        pks-az1  172.16.2.11  pivotal-container-service-8ac1fa94cb5049a1bd82  started  vm-e3748857-522a-42aa-a845-d6965310110f  large.disk  disk-7a21eb76-7795-49ea-8229-eb333839acae  55887c9e-28e6-47cb-aa12-34b646005752  0      true       false
+
+2 instances
+
+
+# See all Bosh tasks in queue
+ubuntu@opsmgr-02:~$ bosh task -a
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 509
+Task 509 | 11:03:36 | Preparing deployment: Preparing deployment (00:00:02)
+Task 509 | 11:03:38 | Running errand: pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 (0) (00:00:13)
+Task 509 | 11:03:51 | Fetching logs for pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 (0): Finding and packing log files (00:00:01)
+Task 509 Started  Wed Jul  1 11:03:36 UTC 2020
+Task 509 Finished Wed Jul  1 11:03:52 UTC 2020
+Task 509 Duration 00:00:16
+Task 509 done
+
+Succeeded
+
+# Bosh cancel-task
+ubuntu@opsmgr-02:~$ bosh cancel-task {task_ID}
+
+# bosh task
+bosh task 278308 --result | jq
+bosh task 278308 --debug
+
+

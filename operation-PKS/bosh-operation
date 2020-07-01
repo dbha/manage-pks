@@ -1,0 +1,106 @@
+
+
+##### 01. Use Bosh CLI from Ops Manager #####
+
+# bosh tile > Go to Credentials > Click on Bosh Commandline Credentials
+
+{"credential":"BOSH_CLIENT=ops_manager BOSH_CLIENT_SECRET=xxxxxx BOSH_CA_CERT=/var/tempest/workspaces/default/root_ca_certificate BOSH_ENVIRONMENT=xxx.xxx.xxx.xxx bosh "}
+
+
+1. SSH to ops Manager
+ssh ubuntu@<ops manager IP>
+
+2. create the 0-bosh.env
+0-bosh.env
+export BOSH_CLIENT=ops_manager
+export BOSH_CLIENT_SECRET=xxxxxx
+export BOSH_CA_CERT=/var/tempest/workspaces/default/root_ca_certificate
+export BOSH_ENVIRONMENT=xxx.xxx.xxx.xxx
+
+$source 0-bosh.env
+$ bosh env
+$ bosh deployments
+
+
+##### 02. Bosh CLI from PKS Client VM #####
+
+1. install OM (Ops Mgr) CLI on PKS client VM
+
+Download OM (Ops Mngr) CLI from https://github.com/pivotal-cf/om/releases
+
+root@PKS-client:~# wget https://github.com/pivotal-cf/om/releases/download/5.0.0/om-linux-5.0.0
+
+root@PKS-client:~# ls
+om-linux-5.0.0
+
+root@PKS-client:~# chmod a+x om-linux-5.0.0
+root@PKS-client:~# mv om-linux-5.0.0 /usr/local/bin/om
+root@PKS-client:~# om -v
+
+2. Install JQ
+
+$ sudo apt-get update
+$ sudo apt install jq
+
+3. ops manager.pem file and credentials
+$om --target https://xxx.xxx.xxx.xxx -u 'admin' -p 'xxxxxx' -k curl -p /api/v0/certificate_authorities -s | jq -r '.certificate_authorities | select(map(.active == true))[0] | .cert_pem' > opsmanager.pem
+$om --target https://opsmgr-02.haas-205.pez.pivotal.io -u 'admin' -p '!Habbi*819' -k curl -p /api/v0/deployed/director/credentials/bosh2_commandline_credentials -s | jq -r '.credential'
+
+
+##### 03. ssh to Bosh #####
+
+1. Bosh tile > status > IP Check
+
+2. VM credentials: Link to Credentials Check
+{"credential":{"type":"simple_credentials","value":{"identity":"vcap","password":"xxxxxxxxxx"}}}
+
+3. SSH to Bosh VM
+
+ubuntu@opsmgr-02:~$ ssh vcap@172.16.1.11
+Unauthorized use is strictly prohibited. All access and activity
+is subject to logging and monitoring.
+vcap@172.16.1.11's password:
+Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-96-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+Last login: Wed Jul  1 09:33:48 2020 from 172.16.1.10
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+bosh/0:~$
+bosh/0:~$
+bosh/0:~$ sudo -i
+[sudo] password for vcap:
+bosh/0:~#
+bosh/0:~#
+bosh/0:~# monit summary
+The Monit daemon 5.2.5 uptime: 21h 40m
+
+Process 'system-metrics-server'     running
+Process 'nats'                      running
+Process 'postgres'                  running
+Process 'director'                  running
+Process 'worker_1'                  running
+Process 'worker_2'                  running
+Process 'worker_3'                  running
+Process 'worker_4'                  running
+Process 'worker_5'                  running
+Process 'director_scheduler'        running
+Process 'director_sync_dns'         running
+Process 'director_nginx'            running
+Process 'health_monitor'            running
+Process 'uaa'                       running
+Process 'credhub'                   running
+Process 'blobstore_nginx'           running
+System 'system_localhost'           running
+bosh/0:~#

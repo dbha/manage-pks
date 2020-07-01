@@ -1,0 +1,66 @@
+
+##### 01. Pre Check / Cleaning #####
+
+# director backup
+bbr director --host BOSH-DIRECTOR-IP --username bbr \
+--private-key-path PRIVATE-KEY-FILE  backup
+
+# bbr_ssh_private_key.pem : director > credentials > bbr_ssh_credentials
+
+# Pre-Check
+bbr director \
+--private-key-path ./bbr_ssh_private_key.pem \
+--username bbr \
+--host 172.16.1.11 \
+--debug \
+pre-backup-check
+
+# Clean
+bbr director \
+--private-key-path ./bbr_ssh_private_key.pem \
+--username bbr \
+--host 172.16.1.11 \
+backup-cleanup
+
+##### 02. Backup director #####
+
+# Backup
+ubuntu@opsmgr-02:~/bbr$ cat bbr_backup.sh
+bbr director \
+--private-key-path ./bbr_ssh_private_key.pem \
+--username bbr \
+--host 172.16.1.11 \
+--debug \
+backup
+
+[bbr] 2020/06/30 06:55:44 INFO - Looking for scripts
+[bbr] 2020/06/30 06:55:44 DEBUG - Attempting to find scripts on bosh/0
+[bbr] 2020/06/30 06:55:44 DEBUG - Trying to execute 'sudo sh -c 'find /var/vcap/jobs/*/bin/bbr/* -type f'' on remote
+[bbr] 2020/06/30 06:55:44 DEBUG - [find files] stdout: /var/vcap/jobs/bbr-credhubdb/bin/bbr/backup
+/var/vcap/jobs/bbr-credhubdb/bin/bbr/restore
+/var/vcap/jobs/bbr-uaadb/bin/bbr/backup
+/var/vcap/jobs/bbr-uaadb/bin/bbr/restore
+/var/vcap/jobs/blobstore/bin/bbr/backup
+/var/vcap/jobs/blobstore/bin/bbr/restore
+.....
+[bbr] 2020/06/30 06:58:23 DEBUG - stderr:
+[bbr] 2020/06/30 06:58:23 DEBUG - Comparing shasums
+[bbr] 2020/06/30 06:58:23 DEBUG - Deleting artifact directory on bosh/0
+[bbr] 2020/06/30 06:58:23 DEBUG - Trying to execute 'sudo rm -rf /var/vcap/store/bbr-backup/blobstore' on remote
+[bbr] 2020/06/30 06:58:25 DEBUG - stdout:
+[bbr] 2020/06/30 06:58:25 DEBUG - stderr:
+[bbr] 2020/06/30 06:58:25 INFO - Finished validity checks -- for job blobstore on bosh/0...
+[bbr] 2020/06/30 06:58:25 INFO - Backup created of 172.16.1.11 on 2020-06-30 06:58:25.123011193 +0000 UTC m=+160.610816090
+[bbr] 2020/06/30 06:58:25 INFO - Cleaning up...
+[bbr] 2020/06/30 06:58:25 DEBUG - Trying to execute 'sudo rm -rf /var/vcap/store/bbr-backup' on remote
+[bbr] 2020/06/30 06:58:25 DEBUG - stdout:
+[bbr] 2020/06/30 06:58:25 DEBUG - stderr:
+
+ubuntu@opsmgr-02:~/bbr$ ls -lrt
+total 14412
+-rw-rw-r-- 1 ubuntu ubuntu     1679 Jun 30 06:45 bbr_ssh_private_key.pem
+-rwxrwxr-x 1 ubuntu ubuntu      127 Jun 30 06:46 bbr_director_prebackup.sh
+drwx------ 2 ubuntu ubuntu     4096 Jun 30 06:55 172.16.1.11_20200630T065544Z
+ubuntu@opsmgr-02:~/bbr$
+
+

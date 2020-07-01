@@ -1,0 +1,248 @@
+
+
+# kubectl get nodes with labels
+ubuntu@opsmgr-02:~$ kubectl get nodes -o wide --show-labels
+NAME                                   STATUS   ROLES    AGE   VERSION            INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME   LABELS
+2193ecc6-db27-4030-81de-71b8e2c85bf2   Ready    <none>   22m   v1.16.7+vmware.1   172.28.2.5    172.28.2.5    Ubuntu 16.04.6 LTS   4.15.0-96-generic   docker://18.9.9     beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,bosh.id=b4cf1068-e5b4-4eb4-b7e1-ec2579871db7,bosh.zone=pks-az3,failure-domain.beta.kubernetes.io/zone=pks-az3,kubernetes.io/arch=amd64,kubernetes.io/hostname=172.28.2.5,kubernetes.io/os=linux,pks-system/cluster.name=my-205-02,pks-system/cluster.uuid=service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20,spec.ip=172.28.2.5
+574627f2-4704-489e-8713-eda4eddfd305   Ready    <none>   24m   v1.16.7+vmware.1   172.28.2.4    172.28.2.4    Ubuntu 16.04.6 LTS   4.15.0-96-generic   docker://18.9.9     beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,bosh.id=c5f9c059-f308-4c56-8113-b842940f0575,bosh.zone=pks-az2,failure-domain.beta.kubernetes.io/zone=pks-az2,kubernetes.io/arch=amd64,kubernetes.io/hostname=172.28.2.4,kubernetes.io/os=linux,pks-system/cluster.name=my-205-02,pks-system/cluster.uuid=service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20,spec.ip=172.28.2.4
+71013138-0ae8-4e3a-bf4f-11e0ca2556b7   Ready    <none>   26m   v1.16.7+vmware.1   172.28.2.3    172.28.2.3    Ubuntu 16.04.6 LTS   4.15.0-96-generic   docker://18.9.9     beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,bosh.id=d5b041f3-fb90-49e2-9d89-00e7255e4c68,bosh.zone=pks-az1,failure-domain.beta.kubernetes.io/zone=pks-az1,kubernetes.io/arch=amd64,kubernetes.io/hostname=172.28.2.3,kubernetes.io/os=linux,pks-system/cluster.name=my-205-02,pks-system/cluster.uuid=service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20,spec.ip=172.28.2.3
+ubuntu@opsmgr-02:~$
+
+
+# Bosh stop K8s cluster
+ubuntu@opsmgr-02:~/pks$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d is --ps
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 535. Done
+
+Deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Instance                                           Process                  Process State  AZ       IPs         Deployment
+apply-addons/c5b13d6e-9361-44d7-876b-95d6e108090a  -                        -              pks-az1  -           service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+master/f2c4d8e5-84b1-4217-9296-618134695808        -                        running        pks-az1  172.28.3.2  service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+~                                                  blackbox                 running        -        -           -
+~                                                  bosh-dns                 running        -        -           -
+~                                                  bosh-dns-healthcheck     running        -        -           -
+~                                                  bosh-dns-resolvconf      running        -        -           -
+~                                                  etcd                     running        -        -           -
+~                                                  kube-apiserver           running        -        -           -
+~                                                  kube-controller-manager  running        -        -           -
+~                                                  kube-scheduler           running        -        -           -
+~                                                  ncp                      running        -        -           -
+~                                                  system-metrics-agent     running        -        -           -
+worker/d592b339-8ecb-4ccb-8514-9669b1d9f260        -                        running        pks-az1  172.28.3.3  service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+~                                                  blackbox                 running        -        -           -
+~                                                  bosh-dns                 running        -        -           -
+~                                                  bosh-dns-healthcheck     running        -        -           -
+~                                                  bosh-dns-resolvconf      running        -        -           -
+~                                                  docker                   running        -        -           -
+~                                                  kube-proxy               running        -        -           -
+~                                                  kubelet                  running        -        -           -
+~                                                  nsx-kube-proxy           running        -        -           -
+~                                                  nsx-node-agent           running        -        -           -
+~                                                  ovs-vswitchd             running        -        -           -
+~                                                  ovsdb-server             running        -        -           -
+~                                                  system-metrics-agent     running        -        -           -
+
+3 instances
+
+Succeeded
+
+# stop worker
+ubuntu@opsmgr-02:~/pks$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d stop worker
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Continue? [yN]: y
+
+Task 536
+
+Task 536 | 11:17:08 | Deprecation: Global 'properties' are deprecated. Please define 'properties' at the job level.
+Task 536 | 11:17:09 | Preparing deployment: Preparing deployment (00:00:01)
+Task 536 | 11:17:10 | Preparing deployment: Rendering templates (00:00:06)
+Task 536 | 11:17:16 | Preparing package compilation: Finding packages to compile (00:00:01)
+Task 536 | 11:17:17 | Updating instance worker: worker/d592b339-8ecb-4ccb-8514-9669b1d9f260 (0) (canary) (00:00:39)
+
+Task 536 Started  Wed Jul  1 11:17:08 UTC 2020
+Task 536 Finished Wed Jul  1 11:17:56 UTC 2020
+Task 536 Duration 00:00:48
+Task 536 done
+
+Succeeded
+
+# # stop master
+ubuntu@opsmgr-02:~/pks$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d stop master
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Continue? [yN]: y
+
+Task 537
+
+Task 537 | 11:18:20 | Deprecation: Global 'properties' are deprecated. Please define 'properties' at the job level.
+Task 537 | 11:18:20 | Preparing deployment: Preparing deployment (00:00:01)
+Task 537 | 11:18:21 | Preparing deployment: Rendering templates (00:00:06)
+Task 537 | 11:18:28 | Preparing package compilation: Finding packages to compile (00:00:00)
+Task 537 | 11:18:28 | Updating instance master: master/f2c4d8e5-84b1-4217-9296-618134695808 (0) (canary) (00:00:15)
+
+Task 537 Started  Wed Jul  1 11:18:20 UTC 2020
+Task 537 Finished Wed Jul  1 11:18:43 UTC 2020
+Task 537 Duration 00:00:23
+Task 537 done
+
+Succeeded
+
+# cluster ps
+ubuntu@opsmgr-02:~/pks$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d is --ps
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 538. Done
+
+Deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Instance                                           Process                  Process State  AZ       IPs         Deployment
+apply-addons/c5b13d6e-9361-44d7-876b-95d6e108090a  -                        -              pks-az1  -           service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+master/f2c4d8e5-84b1-4217-9296-618134695808        -                        stopped        pks-az1  172.28.3.2  service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+~                                                  blackbox                 unknown        -        -           -
+~                                                  bosh-dns                 unknown        -        -           -
+~                                                  bosh-dns-healthcheck     unknown        -        -           -
+~                                                  bosh-dns-resolvconf      unknown        -        -           -
+~                                                  etcd                     unknown        -        -           -
+~                                                  kube-apiserver           unknown        -        -           -
+~                                                  kube-controller-manager  unknown        -        -           -
+~                                                  kube-scheduler           unknown        -        -           -
+~                                                  ncp                      unknown        -        -           -
+~                                                  system-metrics-agent     unknown        -        -           -
+worker/d592b339-8ecb-4ccb-8514-9669b1d9f260        -                        stopped        pks-az1  172.28.3.3  service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+~                                                  blackbox                 unknown        -        -           -
+~                                                  bosh-dns                 unknown        -        -           -
+~                                                  bosh-dns-healthcheck     unknown        -        -           -
+~                                                  bosh-dns-resolvconf      unknown        -        -           -
+~                                                  docker                   unknown        -        -           -
+~                                                  kube-proxy               unknown        -        -           -
+~                                                  kubelet                  unknown        -        -           -
+~                                                  nsx-kube-proxy           unknown        -        -           -
+~                                                  nsx-node-agent           unknown        -        -           -
+~                                                  ovs-vswitchd             unknown        -        -           -
+~                                                  ovsdb-server             unknown        -        -           -
+~                                                  system-metrics-agent     unknown        -        -           -
+
+3 instances
+
+Succeeded
+
+#vm state
+ubuntu@opsmgr-02:~/pks$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d vms
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 539. Done
+
+Deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Instance                                     Process State  AZ       IPs         VM CID                                   VM Type      Active  Stemcell
+master/f2c4d8e5-84b1-4217-9296-618134695808  stopped        pks-az1  172.28.3.2  vm-45622478-9ff8-4838-8424-96c1f83ceb17  medium.disk  true    bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71
+worker/d592b339-8ecb-4ccb-8514-9669b1d9f260  stopped        pks-az1  172.28.3.3  vm-b6f439cc-47cd-47de-b3b8-f6f445fa7c40  medium.disk  true    bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71
+
+2 vms
+
+Succeeded
+
+=> At this point in time, the VMs are still powered in vCenter, Only Process was shutdowned.
+
+# Check Process in master node.
+ubuntu@opsmgr-02:~/pks$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d ssh master/0
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Task 541. Done
+Unauthorized use is strictly prohibited. All access and activity
+is subject to logging and monitoring.
+Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-96-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+Last login: Wed Jul  1 11:24:57 2020 from 172.16.1.10
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+master/f2c4d8e5-84b1-4217-9296-618134695808:~$ sudo -i
+master/f2c4d8e5-84b1-4217-9296-618134695808:~# monit summary
+The Monit daemon 5.2.5 uptime: 1h 35m
+
+Process 'kube-apiserver'            not monitored
+Process 'kube-controller-manager'   not monitored
+Process 'kube-scheduler'            not monitored
+Process 'etcd'                      not monitored
+Process 'blackbox'                  not monitored
+Process 'ncp'                       not monitored
+Process 'bosh-dns'                  not monitored
+Process 'bosh-dns-resolvconf'       not monitored
+Process 'bosh-dns-healthcheck'      not monitored
+Process 'system-metrics-agent'      not monitored
+System 'system_localhost'           running
+
+# master process start
+ubuntu@opsmgr-02:~/bbr$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d start master/0
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Continue? [yN]: y
+
+Task 542
+
+Task 542 | 11:26:37 | Deprecation: Global 'properties' are deprecated. Please define 'properties' at the job level.
+Task 542 | 11:26:38 | Preparing deployment: Preparing deployment (00:00:01)
+Task 542 | 11:26:39 | Preparing deployment: Rendering templates (00:00:06)
+Task 542 | 11:26:46 | Preparing package compilation: Finding packages to compile (00:00:00)
+Task 542 | 11:26:46 | Updating instance master: master/f2c4d8e5-84b1-4217-9296-618134695808 (0) (canary)
+
+
+ (00:01:07)
+
+Task 542 Started  Wed Jul  1 11:26:37 UTC 2020
+Task 542 Finished Wed Jul  1 11:27:53 UTC 2020
+Task 542 Duration 00:01:16
+Task 542 done
+
+Succeeded
+ubuntu@opsmgr-02:~/bbr$
+
+# Check master VM
+master/f2c4d8e5-84b1-4217-9296-618134695808:~# monit summary
+The Monit daemon 5.2.5 uptime: 0m
+
+Process 'kube-apiserver'            running
+Process 'kube-controller-manager'   running
+Process 'kube-scheduler'            running
+Process 'etcd'                      running
+Process 'blackbox'                  running
+Process 'ncp'                       running
+Process 'bosh-dns'                  running
+Process 'bosh-dns-resolvconf'       running
+Process 'bosh-dns-healthcheck'      running
+Process 'system-metrics-agent'      running
+System 'system_localhost'           running
+master/f2c4d8e5-84b1-4217-9296-618134695808:~#
+
+# worker process start
+ubuntu@opsmgr-02:~/bbr$ bosh -d service-instance_4fb0cf25-c690-4c27-8611-69742778a44d start worker
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d'
+
+Continue? [yN]: y
+
+Task 543

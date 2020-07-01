@@ -1,0 +1,128 @@
+
+################################################
+##### Back Up the Enterprise PKS Control Plane
+################################################
+
+
+#### 01. Check PKS Control Plane
+
+# Check deployment
+ubuntu@opsmgr-02:~/bbr$ bosh deployments | grep  pivotal-container-service
+pivotal-container-service-200bf7e1e8023fb36671       	backup-and-restore-sdk/1.17.0       	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	-
+service-instance_70ce225a-a5fd-486c-a21a-67b3536da370	bosh-dns/1.17.0                     	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	pivotal-container-service-200bf7e1e8023fb36671
+ubuntu@opsmgr-02:~/bbr$
+
+# Check PKS & instances
+ubuntu@opsmgr-02:~/bbr$ bosh -d pivotal-container-service-200bf7e1e8023fb36671 instances
+Using environment '172.16.1.11' as client 'ops_manager'
+Task 82. Done
+Deployment 'pivotal-container-service-200bf7e1e8023fb36671'
+
+Instance                                                        Process State  AZ       IPs          Deployment
+pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d  running        pks-az1  172.16.2.12  pivotal-container-service-200bf7e1e8023fb36671
+pks-db/c838f42a-d0ff-4b77-84c5-25dff0e31138                     running        pks-az1  172.16.2.11  pivotal-container-service-200bf7e1e8023fb36671
+
+2 instances
+Succeeded
+
+#### 02. Validate the Enterprise PKS Control Plane
+
+# command
+# PATH-TO-BOSH-SERVER-CERT : path to the root CA certificate : /var/tempest/workspaces/default/root_ca_certificate
+# cp /var/tempest/workspaces/default/root_ca_certificate ./bosh_ca.crt
+
+ubuntu@opsmgr-02:~/bbr$ export PKS_CONTROL_PLANE=pivotal-container-service-200bf7e1e8023fb36671
+
+BOSH_CLIENT_SECRET=BOSH-CLIENT-SECRET bbr deployment \
+--target BOSH-TARGET  --username BOSH-CLIENT --deployment DEPLOYMENT-NAME \
+--ca-cert PATH-TO-BOSH-SERVER-CERT \
+pre-backup-check
+
+ubuntu@opsmgr-02:~/bbr$ bbr deployment \
+> --target 172.16.1.11 \
+> --username $BOSH_CLIENT \
+> --deployment $PKS_CONTROL_PLANE \
+> --ca-cert ./bosh_ca.crt \
+> pre-backup-check
+[bbr] 2020/06/30 07:28:31 INFO - Looking for scripts
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/bbr-uaadb/backup
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/bbr-uaadb/restore
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/pks-api/backup
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/pks-api/post-backup-unlock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/pks-api/post-restore-unlock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/pks-api/pre-backup-lock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/pks-api/pre-restore-lock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/pks-api/restore
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/uaa/post-backup-unlock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/uaa/post-restore-unlock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/uaa/pre-backup-lock
+[bbr] 2020/06/30 07:28:36 INFO - pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d/uaa/pre-restore-lock
+[bbr] 2020/06/30 07:28:36 INFO - Running pre-checks for backup of pivotal-container-service-200bf7e1e8023fb36671...
+[07:28:36] Deployment 'pivotal-container-service-200bf7e1e8023fb36671' can be backed up.
+ubuntu@opsmgr-02:~/bbr$
+
+#### 03. Back Up the Enterprise PKS Control Plane
+
+#command
+BOSH_CLIENT_SECRET=BOSH-CLIENT-SECRET nohup bbr deployment \
+--target BOSH-TARGET --username BOSH-CLIENT --deployment DEPLOYMENT-NAME \
+--ca-cert PATH-TO-BOSH-SERVER-CERT \
+backup --with-manifest [--artifact-path]
+
+ubuntu@opsmgr-02:~/bbr$ cat << EOF > ./bbr_pks_control_backup.sh
+> nohup bbr deployment \
+> --target 172.16.1.11 \
+> --username $BOSH_CLIENT \
+> --deployment $PKS_CONTROL_PLANE \
+> --ca-cert ./bosh_ca.crt \
+> backup --with-manifest
+> EOF
+
+ubuntu@opsmgr-02:~/bbr$ chmod +x bbr_pks_control_backup.sh
+ubuntu@opsmgr-02:~/bbr$ ./bbr_pks_control_backup.sh
+nohup: ignoring input and appending output to 'nohup.out'
+ubuntu@opsmgr-02:~/bbr$
+ubuntu@opsmgr-02:~/bbr$ tail -f nohup.out
+[bbr] 2020/06/30 07:37:38 INFO - Finished copying backup -- for job bbr-uaadb on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d...
+[bbr] 2020/06/30 07:37:38 INFO - Starting validity checks -- for job bbr-uaadb on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d...
+[bbr] 2020/06/30 07:37:38 INFO - Copying backup for job pks-api on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d -- 100% complete
+[bbr] 2020/06/30 07:37:38 INFO - Finished copying backup -- for job pks-api on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d...
+[bbr] 2020/06/30 07:37:38 INFO - Starting validity checks -- for job pks-api on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d...
+[bbr] 2020/06/30 07:37:38 INFO - Finished validity checks -- for job bbr-uaadb on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d...
+[bbr] 2020/06/30 07:37:38 INFO - Finished validity checks -- for job pks-api on pivotal-container-service/1f3a8293-9c5e-476f-820f-1c331367755d...
+[bbr] 2020/06/30 07:37:38 INFO - Backup created of pivotal-container-service-200bf7e1e8023fb36671 on 2020-06-30 07:37:38.440215492 +0000 UTC m=+17.584966987
+
+ubuntu@opsmgr-02:~/bbr$ ls -lrt
+total 14432
+drwx------ 2 ubuntu ubuntu     4096 Jun 30 07:37 pivotal-container-service-200bf7e1e8023fb36671_20200630T073720Z
+-rw------- 1 ubuntu ubuntu     5405 Jun 30 07:37 nohup.out
+
+ubuntu@opsmgr-02:~/bbr$ ls -lrt pivotal-container-service-200bf7e1e8023fb36671_20200630T073720Z
+total 208
+-rw-rw-r-- 1 ubuntu ubuntu 114578 Jun 30 07:37 manifest.yml
+-rw-rw-r-- 1 ubuntu ubuntu  61440 Jun 30 07:37 pivotal-container-service-0-bbr-uaadb.tar
+-rw-rw-r-- 1 ubuntu ubuntu  30720 Jun 30 07:37 pivotal-container-service-0-pks-api.tar
+-rw-rw-r-- 1 ubuntu ubuntu    423 Jun 30 07:37 metadata
+ubuntu@opsmgr-02:~/bbr$
+
+
+#### 04. Back Up the Enterprise PKS Control Plane
+
+BOSH_CLIENT_SECRET=BOSH-CLIENT-SECRET \
+nohup bbr deployment  --target BOSH-TARGET \
+--username BOSH-CLIENT  --deployment DEPLOYMENT-NAME \
+--ca-cert PATH-TO-BOSH-SERVER-CERT \
+restore \
+--artifact-path PATH-TO-DEPLOYMENT-BACKUP
+
+BOSH_CLIENT_SECRET=SEuuCRacbKIz-uWW0hScWn54srsG-Mqr \
+bbr deployment \
+--target 172.16.1.11 \
+--username $BOSH_CLIENT \
+--deployment pivotal-container-service-200bf7e1e8023fb36671 \
+--ca-cert ./bosh_ca.crt \
+restore \
+--artifact-path /home/ubuntu/bbr/pivotal-container-service-200bf7e1e8023fb36671_20200630T073720Z
+
+
+
