@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mydisk
+  labels:
+    app: mynginx-persistent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1 #k8s 1.16
+kind: Deployment
+metadata:
+  labels:
+    app: mynginx-persistent
+  name: mynginx-persistent-deploy
+#  namespace: mycluster02
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mynginx-persistent
+  template:
+    metadata:
+      labels:
+        app: mynginx-persistent
+      # pod annotation for velero backup
+      annotations:
+        backup.velero.io/backup-volumes: dbhapath
+    spec:
+      containers:
+        - image: nginx
+          name: mynginx-persistent
+          volumeMounts:
+            - name: dbhapath
+              mountPath: /data/shared
+          ports:
+            - containerPort: 80
+              protocol: TCP
+      volumes:
+        - name: dbhapath
+          persistentVolumeClaim:
+            claimName: mydisk
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mynginx-persistent
+  name: mynginx-persistent-nginx
+#  namespace: mycluster02
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: mynginx-persistent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mynginx-persistent
+  name: mynginx-persistent-nodeport
+#  namespace: mycluster02
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: mynginx-persistent
+  type: NodePort

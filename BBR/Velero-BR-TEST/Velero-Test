@@ -1,0 +1,279 @@
+##############################
+## 01. Check PKS Cluster
+## 02. Velero Install(Restic)
+## 03. Sample App Deploy(Stateful)
+## 04. Velero Backup
+## 05. Delete NS(Sample App)
+## 06. Restore
+## 07. Check Sample App
+##############################
+
+## 01. Create PKS Cluster
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks create-cluster pez-pks02 --external-hostname pez-pks02.pksdemo.net --plan small --num-nodes 2
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks clusters
+
+PKS Version     Name         k8s Version  Plan Name      UUID                                  Status       Action
+1.7.0-build.26  pez-pks01    1.16.7       small          6f6eb3cd-590a-4e81-9ce6-e71ebe660f93  succeeded    UPGRADE
+1.7.0-build.26  pez-pks02    1.16.7       small          924c23a4-2c30-49f7-8ea3-48548c06f8f6  in progress  CREATE
+1.7.0-build.26  pez-3master  1.16.7       small-3master  ee5b2a9e-5fae-4706-be93-26399664d0d5  succeeded    UPGRADE
+
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks clusters
+
+PKS Version     Name         k8s Version  Plan Name      UUID                                  Status     Action
+1.7.0-build.26  pez-pks01    1.16.7       small          6f6eb3cd-590a-4e81-9ce6-e71ebe660f93  succeeded  UPGRADE
+1.7.0-build.26  pez-pks02    1.16.7       small          924c23a4-2c30-49f7-8ea3-48548c06f8f6  succeeded  CREATE
+1.7.0-build.26  pez-3master  1.16.7       small-3master  ee5b2a9e-5fae-4706-be93-26399664d0d5  succeeded  UPGRADE
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks cluster pez-pks02
+
+PKS Version:              1.7.0-build.26
+Name:                     pez-pks02
+K8s Version:              1.16.7
+Plan Name:                small
+UUID:                     924c23a4-2c30-49f7-8ea3-48548c06f8f6
+Last Action:              CREATE
+Last Action State:        succeeded
+Last Action Description:  Instance provisioning completed
+Kubernetes Master Host:   pez-pks02.pksdemo.net
+Kubernetes Master Port:   8443
+Worker Nodes:             2
+Kubernetes Master IP(s):  10.195.20.151
+Network Profile Name:
+Kubernetes Profile Name:
+Tags:
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ kubectl get nodes
+NAME                                   STATUS   ROLES    AGE   VERSION
+d5582720-1a84-4b51-acaf-e4631039c4bd   Ready    <none>   16m   v1.16.7+vmware.1
+f5c4b5e7-ae50-4740-bea7-8990437be54e   Ready    <none>   19m   v1.16.7+vmware.1
+
+## 02. Velero Install(Restic)
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/velero/velero-v1.4.0-linux-amd64$ velero install  --provider aws --bucket velero --secret-file ./credentials-velero --use-volume-snapshots=false --plugins velero/velero-plugin-for-aws:v1.0.1  --use-restic --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.16.1.14:9000,publicUrl=http://172.16.1.14:9000
+CustomResourceDefinition/backups.velero.io: attempting to create resource
+CustomResourceDefinition/backups.velero.io: created
+CustomResourceDefinition/backupstoragelocations.velero.io: attempting to create resource
+CustomResourceDefinition/backupstoragelocations.velero.io: created
+CustomResourceDefinition/deletebackuprequests.velero.io: attempting to create resource
+CustomResourceDefinition/deletebackuprequests.velero.io: created
+CustomResourceDefinition/downloadrequests.velero.io: attempting to create resource
+CustomResourceDefinition/downloadrequests.velero.io: created
+CustomResourceDefinition/podvolumebackups.velero.io: attempting to create resource
+CustomResourceDefinition/podvolumebackups.velero.io: created
+
+# /var/lib/kubelet/pods -> /var/vcap/data/kubelet/pods
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/velero/velero-v1.4.0-linux-amd64$ kubectl edit ds restic -n velero
+daemonset.apps/restic edited
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/velero/velero-v1.4.0-linux-amd64$ kubectl get po -n velero
+NAME                     READY   STATUS    RESTARTS   AGE
+restic-jb5v4             1/1     Running   0          14s
+restic-rlblt             1/1     Running   0          14s
+velero-6b4674898-grwhh   1/1     Running   0          38s
+
+## 03. Sample App Deploy(Stateful)
+
+# create storage class
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl apply -f storageclass-vele.yaml
+storageclass.storage.k8s.io/pkssc created
+
+
+# Deploy nginx
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl apply -f mynginx-pvc.yaml -n nginx-pv
+persistentvolumeclaim/mydisk created
+deployment.apps/mynginx-persistent-deploy created
+service/mynginx-persistent-nginx created
+service/mynginx-persistent-nodeport created
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl get po -n nginx-pv
+NAME                                       READY   STATUS    RESTARTS   AGE
+mynginx-persistent-deploy-bb9d9fbb-vhns4   1/1     Running   0          75s
+
+# ssh pod
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl exec -it -n nginx-pv mynginx-persistent-deploy-bb9d9fbb-vhns4 -- bash
+
+root@mynginx-persistent-deploy-bb9d9fbb-vhns4:/# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+overlay          50G  1.5G   46G   4% /
+tmpfs            64M     0   64M   0% /dev
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+/dev/sdd        2.0G  3.0M  1.9G   1% /data/shared
+/dev/sdb2        28G  3.3G   23G  13% /etc/hosts
+/dev/sdc1        50G  1.5G   46G   4% /etc/hostname
+shm              64M     0   64M   0% /dev/shm
+tmpfs           2.0G   12K  2.0G   1% /run/secrets/kubernetes.io/serviceaccount
+tmpfs           2.0G     0  2.0G   0% /proc/acpi
+tmpfs           2.0G     0  2.0G   0% /proc/scsi
+tmpfs           2.0G     0  2.0G   0% /sys/firmware
+
+# Write file in persistent volume
+root@mynginx-persistent-deploy-bb9d9fbb-vhns4:/data/shared# cat << EOF > testfile
+> This is test files
+> EOF
+root@mynginx-persistent-deploy-bb9d9fbb-vhns4:/data/shared# ls -lrt
+total 20
+drwx------ 2 root root 16384 Jul  2 11:20 lost+found
+-rw-r--r-- 1 root root    19 Jul  2 11:23 testfile
+root@mynginx-persistent-deploy-bb9d9fbb-vhns4:/data/shared# cat testfile
+This is test files
+root@mynginx-persistent-deploy-bb9d9fbb-vhns4:/data/shared#
+
+# Recheck annotation pod for velero volume backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl get po mynginx-persistent-deploy-bb9d9fbb-vhns4 -o yaml -n nginx-pv
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    backup.velero.io/backup-volumes: dbhapath
+  creationTimestamp: "2020-07-02T11:20:33Z"
+  generateName: mynginx-persistent-deploy-bb9d9fbb-
+  labels:
+  .....
+
+# Check Pod in all namespace
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                                            READY   STATUS      RESTARTS   AGE
+kube-system   coredns-5b6649768f-h8krj                                        1/1     Running     0          33m
+kube-system   coredns-5b6649768f-mwwnm                                        1/1     Running     0          33m
+kube-system   coredns-5b6649768f-xtmr8                                        1/1     Running     0          33m
+kube-system   metrics-server-5d9d8b9889-rvt75                                 1/1     Running     0          33m
+nginx-pv      mynginx-persistent-deploy-bb9d9fbb-vhns4                        1/1     Running     0          5m13s
+pks-system    cert-generator-1311f65a5dfa4bf6774ba070152672eacdb3e6b2-fspw9   0/1     Completed   0          33m
+pks-system    metric-controller-5dfd968d6f-zkgxx                              1/1     Running     0          33m
+pks-system    node-exporter-5fk5q                                             1/1     Running     0          33m
+pks-system    node-exporter-j27k6                                             1/1     Running     0          33m
+pks-system    observability-manager-7fcc589965-rdhgz                          1/1     Running     0          33m
+pks-system    telegraf-gs89q                                                  1/1     Running     0          33m
+pks-system    telegraf-w6ppw                                                  1/1     Running     0          33m
+pks-system    telemetry-agent-778fc8997d-6dgjx                                2/2     Running     0          32m
+pks-system    validator-5787b98d57-dzhqc                                      1/1     Running     0          33m
+velero        restic-jb5v4                                                    1/1     Running     0          17m
+velero        restic-rlblt                                                    1/1     Running     0          17m
+velero        velero-6b4674898-grwhh                                          1/1     Running     0          17m
+
+## 04. Velero Backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero backup get
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$
+
+# velero backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero backup create pez-pks02 --include-namespaces nginx-pv
+Backup request "pez-pks02" submitted successfully.
+Run `velero backup describe pez-pks02` or `velero backup logs pez-pks02` for more details.
+
+# check velero backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero backup describe pez-pks02
+Name:         pez-pks02
+Namespace:    velero
+Labels:       velero.io/storage-location=default
+Annotations:  velero.io/source-cluster-k8s-gitversion=v1.16.7+vmware.1
+              velero.io/source-cluster-k8s-major-version=1
+              velero.io/source-cluster-k8s-minor-version=16
+
+Phase:  Completed
+
+Namespaces:
+  Included:  nginx-pv
+  Excluded:  <none>
+
+Resources:
+  Included:        *
+  Excluded:        <none>
+  Cluster-scoped:  auto
+
+Label selector:  <none>
+
+Storage Location:  default
+
+Velero-Native Snapshot PVs:  auto
+
+TTL:  720h0m0s
+
+Hooks:  <none>
+
+Backup Format Version:  1
+
+Started:    2020-07-02 11:27:51 +0000 UTC
+Completed:  2020-07-02 11:27:54 +0000 UTC
+
+Expiration:  2020-08-01 11:27:51 +0000 UTC
+
+Total items to be backed up:  28
+Items backed up:              28
+
+Velero-Native Snapshots: <none included>
+
+Restic Backups (specify --details for more information):
+  Completed:  1
+
+# List velero backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero backup get
+NAME        STATUS      CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+pez-pks02   Completed   2020-07-02 11:27:51 +0000 UTC   29d       default            <none>
+
+## 05. Delete NS(Sample App)
+
+# Delete NS
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl delete ns nginx-pv
+namespace "nginx-pv" deleted
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl get ns
+NAME              STATUS   AGE
+default           Active   49m
+kube-node-lease   Active   49m
+kube-public       Active   49m
+kube-system       Active   49m
+pks-system        Active   40m
+velero            Active   25m
+
+## 06. Velero Restore from backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero backup get
+NAME        STATUS      CREATED                         EXPIRES   STORAGE LOCATION   SELECTOR
+pez-pks02   Completed   2020-07-02 11:27:51 +0000 UTC   29d       default            <none>
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero restore create pez-pks02-first --from-backup pez-pks02
+Restore request "pez-pks02-first" submitted successfully.
+Run `velero restore describe pez-pks02-first` or `velero restore logs pez-pks02-first` for more details.
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero restore describe pez-pks02-first
+Name:         pez-pks02-first
+Namespace:    velero
+Labels:       <none>
+Annotations:  <none>
+
+Phase:  Completed
+
+Backup:  pez-pks02
+
+Namespaces:
+  Included:  all namespaces found in the backup
+  Excluded:  <none>
+
+Resources:
+  Included:        *
+  Excluded:        nodes, events, events.events.k8s.io, backups.velero.io, restores.velero.io, resticrepositories.velero.io
+  Cluster-scoped:  auto
+
+Namespace mappings:  <none>
+
+Label selector:  <none>
+
+Restore PVs:  auto
+
+Restic Restores (specify --details for more information):
+  Completed:  1
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ velero restore get
+NAME              BACKUP      STATUS      WARNINGS   ERRORS   CREATED                         SELECTOR
+pez-pks02-first   pez-pks02   Completed   0          0        2020-07-02 11:34:07 +0000 UTC   <none>
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$
+
+
+## 07. Check Sample App
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl get po -n nginx-pv
+NAME                                       READY   STATUS    RESTARTS   AGE
+mynginx-persistent-deploy-bb9d9fbb-vhns4   1/1     Running   0          91s
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl exec -it -n nginx-pv mynginx-persistent-deploy-bb9d9fbb-vhns4 -- cat /data/shared/testfile
+This is test files
+
