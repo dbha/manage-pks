@@ -1,0 +1,653 @@
+
+##### 01. PKS Control Plane Backup ######
+
+#Chekc PKS Clusters
+ubuntu@opsmgr-02:~/yaml/nginx$ pks clusters
+
+PKS Version     Name       k8s Version  Plan Name  UUID                                  Status     Action
+1.7.0-build.26  my-205-01  1.16.7       small      13c913c2-4989-446f-b0e2-de3edaedeee7  succeeded  UPGRADE
+1.7.0-build.26  my-205-03  1.16.7       small      4fb0cf25-c690-4c27-8611-69742778a44d  succeeded  UPGRADE
+1.7.0-build.26  my-205-02  1.16.7       small      deb5f5eb-7e60-4e1f-b443-a18618007e20  succeeded  UPGRADE
+
+# Check K8s Context
+ubuntu@opsmgr-02:~/yaml/nginx$ kubectl config get-contexts
+CURRENT   NAME        CLUSTER     AUTHINFO                               NAMESPACE
+*         my-205-01   my-205-01   b87aaa43-f92b-4528-b8d5-b548ebb75052
+          my-205-02   my-205-02   438db473-248e-4cc8-aeba-fb2658a8d0b6
+          my-205-03   my-205-03   856d6083-73d1-46ed-a800-b2c3fa26290d
+
+# Check App on K8s(my-205-01)
+ubuntu@opsmgr-02:~/yaml/nginx$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+0702          simplehome-deploy-74bbb54798-6ghqc       1/1     Running   0          31s
+0702          simplehome-deploy-74bbb54798-dgj5p       1/1     Running   0          31s
+0702          simplehome-deploy-74bbb54798-fx7mg       1/1     Running   0          31s
+kube-system   coredns-5b6649768f-9ds7f                 1/1     Running   0          16h
+kube-system   coredns-5b6649768f-lnrjl                 1/1     Running   0          16h
+kube-system   coredns-5b6649768f-pg8t2                 1/1     Running   0          16h
+kube-system   metrics-server-5d9d8b9889-n84ng          1/1     Running   0          16h
+pks-system    event-controller-6969f56f88-ckx5r        2/2     Running   0          16h
+pks-system    fluent-bit-4mnpf                         2/2     Running   0          16h
+pks-system    fluent-bit-rkwv4                         2/2     Running   0          16h
+pks-system    fluent-bit-zsf5j                         2/2     Running   0          16h
+pks-system    metric-controller-5dfd968d6f-5vpcx       1/1     Running   0          16h
+pks-system    observability-manager-6487c9fbf9-tkxsq   1/1     Running   0          16h
+pks-system    sink-controller-7799b4f4d7-b88tf         1/1     Running   0          16h
+pks-system    telegraf-89kcr                           1/1     Running   0          16h
+pks-system    telegraf-h22c9                           1/1     Running   0          16h
+pks-system    telegraf-p8bdj                           1/1     Running   0          16h
+pks-system    telemetry-agent-778fc8997d-bvlz2         2/2     Running   0          15h
+pks-system    validator-5787b98d57-lbj8c               1/1     Running   0          16h
+
+# Change K8s Context
+ubuntu@opsmgr-02:~/yaml/nginx$ kubectl config get-contexts
+CURRENT   NAME        CLUSTER     AUTHINFO                               NAMESPACE
+          my-205-01   my-205-01   b87aaa43-f92b-4528-b8d5-b548ebb75052
+*         my-205-02   my-205-02   438db473-248e-4cc8-aeba-fb2658a8d0b6
+          my-205-03   my-205-03   856d6083-73d1-46ed-a800-b2c3fa26290d
+
+# Check App on K8s(my-205-02)
+# PV App in nginx NS
+ubuntu@opsmgr-02:~/yaml/nginx$ kubectl get po,pvc --all-namespaces
+NAMESPACE     NAME                                             READY   STATUS    RESTARTS   AGE
+kube-system   pod/coredns-5b6649768f-7clrz                     1/1     Running   0          17h
+kube-system   pod/coredns-5b6649768f-fkdgz                     1/1     Running   0          17h
+kube-system   pod/coredns-5b6649768f-p9884                     1/1     Running   0          17h
+kube-system   pod/metrics-server-5d9d8b9889-trr2r              1/1     Running   0          17h
+nginx         pod/mynginx-persistent-deploy-67799cfbf7-hff6s   1/1     Running   0          2m51s
+pks-system    pod/event-controller-6969f56f88-ktngt            2/2     Running   0          17h
+pks-system    pod/fluent-bit-jzlt4                             2/2     Running   0          17h
+pks-system    pod/fluent-bit-lxm6x                             2/2     Running   0          17h
+pks-system    pod/fluent-bit-mkv6f                             2/2     Running   0          17h
+pks-system    pod/metric-controller-5dfd968d6f-jgjwx           1/1     Running   0          17h
+pks-system    pod/observability-manager-6487c9fbf9-6lvnr       1/1     Running   0          17h
+pks-system    pod/sink-controller-7799b4f4d7-xjmh6             1/1     Running   0          17h
+pks-system    pod/telegraf-86shm                               1/1     Running   0          17h
+pks-system    pod/telegraf-kmtr2                               1/1     Running   0          17h
+pks-system    pod/telegraf-z5v5j                               1/1     Running   0          17h
+pks-system    pod/telemetry-agent-848b86f855-dk45g             2/2     Running   0          17h
+pks-system    pod/validator-5787b98d57-2h8zq                   1/1     Running   0          17h
+
+NAMESPACE   NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+nginx       persistentvolumeclaim/mydisk   Bound    pvc-1d07a8be-ebc5-4c4d-9704-7677da2a52dc   2Gi        RWO            pkssc          2m51s
+
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/# cat /data/shared/0702.txt
+This is test
+0702
+
+# Change K8s Context
+ubuntu@opsmgr-02:~/yaml/nginx$ kubectl config get-contexts
+CURRENT   NAME        CLUSTER     AUTHINFO                               NAMESPACE
+          my-205-01   my-205-01   b87aaa43-f92b-4528-b8d5-b548ebb75052
+          my-205-02   my-205-02   438db473-248e-4cc8-aeba-fb2658a8d0b6
+*         my-205-03   my-205-03   856d6083-73d1-46ed-a800-b2c3fa26290d
+
+# Check App on K8s(my-205-02)
+ubuntu@opsmgr-02:~/yaml/nginx$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+kube-system   coredns-5b6649768f-8vldr                 1/1     Running   0          16h
+kube-system   coredns-5b6649768f-jkpz8                 1/1     Running   0          16h
+kube-system   coredns-5b6649768f-nbdjn                 1/1     Running   0          16h
+kube-system   metrics-server-5d9d8b9889-s6bs8          1/1     Running   0          16h
+nginx         simplehome-deploy-74bbb54798-dtngl       1/1     Running   0          16s
+nginx         simplehome-deploy-74bbb54798-f8z4f       1/1     Running   0          16s
+nginx         simplehome-deploy-74bbb54798-tt6dv       1/1     Running   0          16s
+pks-system    event-controller-6969f56f88-gxvmk        2/2     Running   0          16h
+pks-system    fluent-bit-bnxr6                         2/2     Running   0          16h
+pks-system    metric-controller-5dfd968d6f-cwklx       1/1     Running   0          16h
+pks-system    observability-manager-6487c9fbf9-fhx68   1/1     Running   0          16h
+pks-system    sink-controller-7799b4f4d7-2zxgx         1/1     Running   0          16h
+pks-system    telegraf-x7dzw                           1/1     Running   0          16h
+pks-system    telemetry-agent-848b86f855-5k27f         2/2     Running   0          16h
+pks-system    validator-5787b98d57-zgjsq               1/1     Running   0          16h
+ubuntu@opsmgr-02:~/yaml/nginx$
+
+
+# Check PKS Control Plane
+ubuntu@opsmgr-02:~/bbr$ bosh deployments | grep pivotal-container-service-8ac1fa94cb5049a1bd82
+pivotal-container-service-8ac1fa94cb5049a1bd82       	backup-and-restore-sdk/1.17.0       	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	-
+service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7	bosh-dns/1.17.0                     	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	pivotal-container-service-8ac1fa94cb5049a1bd82
+service-instance_4fb0cf25-c690-4c27-8611-69742778a44d	bosh-dns/1.17.0                     	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	pivotal-container-service-8ac1fa94cb5049a1bd82
+service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20	bosh-dns/1.17.0                     	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71	pivotal-container-service-8ac1fa94cb5049a1bd82
+
+# Before PKS Control Plane, PKS cluster precheck
+ubuntu@opsmgr-02:~/bbr$ ./bbr_pks_all_cluster_precheck.sh
+[04:18:00] Pending: service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7, service-instance_4fb0cf25-c690-4c27-8611-69742778a44d, service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20
+[04:18:00] -------------------------
+[04:18:05] Deployment 'service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20' can be backed up.
+[04:18:06] Deployment 'service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7' can be backed up.
+[04:18:06] Deployment 'service-instance_4fb0cf25-c690-4c27-8611-69742778a44d' can be backed up.
+[04:18:06] -------------------------
+[04:18:06] Successfully can be backed up: service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7, service-instance_4fb0cf25-c690-4c27-8611-69742778a44d, service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20
+ubuntu@opsmgr-02:~/bbr$
+
+
+# clean-up
+ubuntu@opsmgr-02:~/bbr$ bosh clean-up --all
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Continue? [yN]: y
+
+Task 582
+
+Task 582 | 04:18:56 | Deleting releases: windows-syslog/1.0.3
+Task 582 | 04:18:56 | Deleting packages: blackbox-windows/46b277603e0857a2ac6fad3ac5e2fab6f89c17e3 (00:00:00)
+Task 582 | 04:18:56 | Deleting packages: golang-1-windows/b6b61ba1bc63526cb2091805914d3e0ab200e4be (00:00:00)
+Task 582 | 04:18:56 | Deleting jobs: syslog_forwarder_windows/0df12b16dbbad589085d64b6d7f6edeabba72bdb (00:00:00)
+Task 582 | 04:18:56 | Deleting releases: windows-syslog/1.0.3 (00:00:00)
+Task 582 | 04:18:57 | Deleting compiled packages: flanneld-windows for windows2019/2019.15
+Task 582 | 04:18:57 | Deleting compiled packages: kubernetes-windows for windows2019/2019.15
+Task 582 | 04:18:57 | Deleting compiled packages: docker-windows for windows2019/2019.15
+Task 582 | 04:18:57 | Deleting compiled packages: cni-windows for windows2019/2019.15
+Task 582 | 04:18:57 | Deleting compiled packages: kubernetes-windows for windows2019/2019.15 (00:00:00)
+Task 582 | 04:18:57 | Deleting compiled packages: flanneld-windows for windows2019/2019.15 (00:00:00)
+Task 582 | 04:18:57 | Deleting compiled packages: cni-windows for windows2019/2019.15 (00:00:00)
+Task 582 | 04:18:57 | Deleting compiled packages: docker-windows for windows2019/2019.15 (00:00:00)
+Task 582 | 04:18:57 | Deleting dns blobs: DNS blobs (00:00:00)
+
+Task 582 Started  Thu Jul  2 04:18:56 UTC 2020
+Task 582 Finished Thu Jul  2 04:18:57 UTC 2020
+Task 582 Duration 00:00:01
+Task 582 done
+
+Succeeded
+
+# PKS All Cluster Backup
+ubuntu@opsmgr-02:~/bbr$ ./bbr_pks_all_cluster_backup.sh
+Starting backup...
+[04:19:45] Pending: service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7, service-instance_4fb0cf25-c690-4c27-8611-69742778a44d, service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20
+[04:19:45] -------------------------
+[04:19:45] Starting backup of service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20, log file: service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20_20200702T041945Z.log
+[04:19:45] Starting backup of service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7, log file: service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7_20200702T041945Z.log
+[04:19:45] Starting backup of service-instance_4fb0cf25-c690-4c27-8611-69742778a44d, log file: service-instance_4fb0cf25-c690-4c27-8611-69742778a44d_20200702T041945Z.log
+[04:19:51] Finished backup of service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20
+[04:19:51] Finished backup of service-instance_4fb0cf25-c690-4c27-8611-69742778a44d
+[04:19:52] Finished backup of service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7
+[04:19:52] -------------------------
+[04:19:52] Successfully backed up: service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7, service-instance_4fb0cf25-c690-4c27-8611-69742778a44d, service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20
+ubuntu@opsmgr-02:~/bbr$
+
+# PKS Control Plane Precheck
+ubuntu@opsmgr-02:~/bbr$ ./bbr_pks_control_preback_check.sh
+[bbr] 2020/07/02 04:20:56 INFO - Looking for scripts
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/bbr-uaadb/backup
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/bbr-uaadb/restore
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/backup
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/post-backup-unlock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/post-restore-unlock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/pre-backup-lock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/pre-restore-lock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/restore
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/post-backup-unlock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/post-restore-unlock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/pre-backup-lock
+[bbr] 2020/07/02 04:21:00 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/pre-restore-lock
+[bbr] 2020/07/02 04:21:00 INFO - Running pre-checks for backup of pivotal-container-service-8ac1fa94cb5049a1bd82...
+[04:21:00] Deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82' can be backed up.
+ubuntu@opsmgr-02:~/bbr$
+
+# PKS Control Plane backup
+ubuntu@opsmgr-02:~/bbr$ ./bbr_pks_control_backup.sh
+[bbr] 2020/07/02 04:21:55 INFO - Looking for scripts
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/bbr-uaadb/backup
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/bbr-uaadb/restore
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/backup
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/post-backup-unlock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/post-restore-unlock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/pre-backup-lock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/pre-restore-lock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/pks-api/restore
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/post-backup-unlock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/post-restore-unlock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/pre-backup-lock
+[bbr] 2020/07/02 04:21:59 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/pre-restore-lock
+[bbr] 2020/07/02 04:21:59 INFO - Running pre-checks for backup of pivotal-container-service-8ac1fa94cb5049a1bd82...
+[bbr] 2020/07/02 04:22:00 INFO - Starting backup of pivotal-container-service-8ac1fa94cb5049a1bd82...
+[bbr] 2020/07/02 04:22:00 INFO - Running pre-backup-lock scripts...
+[bbr] 2020/07/02 04:22:00 INFO - Locking uaa on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 for backup...
+[bbr] 2020/07/02 04:22:00 INFO - Locking pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 for backup...
+[bbr] 2020/07/02 04:22:00 INFO - Finished locking pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 for backup.
+[bbr] 2020/07/02 04:22:06 INFO - Finished locking uaa on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 for backup.
+[bbr] 2020/07/02 04:22:06 INFO - Finished running pre-backup-lock scripts.
+[bbr] 2020/07/02 04:22:06 INFO - Running backup scripts...
+[bbr] 2020/07/02 04:22:06 INFO - Backing up bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:06 INFO - Backing up pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:06 INFO - Finished backing up pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804.
+[bbr] 2020/07/02 04:22:06 INFO - Finished backing up bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804.
+[bbr] 2020/07/02 04:22:06 INFO - Finished running backup scripts.
+[bbr] 2020/07/02 04:22:06 INFO - Running post-backup-unlock scripts...
+[bbr] 2020/07/02 04:22:06 INFO - Unlocking uaa on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:06 INFO - Unlocking pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:06 INFO - Finished unlocking pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804.
+[bbr] 2020/07/02 04:22:12 INFO - Finished unlocking uaa on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804.
+[bbr] 2020/07/02 04:22:12 INFO - Finished running post-backup-unlock scripts.
+[bbr] 2020/07/02 04:22:12 INFO - Copying backup -- 32K uncompressed -- for job pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:12 INFO - Copying backup -- 56K uncompressed -- for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:12 INFO - Copying backup for job pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 -- 31% complete
+[bbr] 2020/07/02 04:22:12 INFO - Copying backup for job pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 -- 93% complete
+[bbr] 2020/07/02 04:22:12 INFO - Finished copying backup -- for job pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:12 INFO - Starting validity checks -- for job pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:13 INFO - Copying backup for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 -- 17% complete
+[bbr] 2020/07/02 04:22:13 INFO - Copying backup for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 -- 75% complete
+[bbr] 2020/07/02 04:22:13 INFO - Copying backup for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804 -- 100% complete
+[bbr] 2020/07/02 04:22:13 INFO - Finished copying backup -- for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:13 INFO - Starting validity checks -- for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:13 INFO - Finished validity checks -- for job bbr-uaadb on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:13 INFO - Finished validity checks -- for job pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 04:22:13 INFO - Backup created of pivotal-container-service-8ac1fa94cb5049a1bd82 on 2020-07-02 04:22:13.219911323 +0000 UTC m=+17.341301782
+
+
+# Check Backup artifacts
+ubuntu@opsmgr-02:~/bbr$ ls -lrt
+
+drwx------ 2 ubuntu ubuntu     4096 Jul  1 09:09 pivotal-container-service-8ac1fa94cb5049a1bd82_20200701T090921Z
+-rwxrwxr-x 1 ubuntu ubuntu      489 Jul  1 09:41 bbr_pks_control_restore.sh
+drwx------ 2 ubuntu ubuntu     4096 Jul  2 04:19 service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20_20200702T041945Z
+drwx------ 2 ubuntu ubuntu     4096 Jul  2 04:19 service-instance_4fb0cf25-c690-4c27-8611-69742778a44d_20200702T041945Z
+-rw-r--r-- 1 ubuntu ubuntu     5510 Jul  2 04:19 service-instance_deb5f5eb-7e60-4e1f-b443-a18618007e20_20200702T041945Z.log
+drwx------ 2 ubuntu ubuntu     4096 Jul  2 04:19 service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7_20200702T041945Z
+-rw-r--r-- 1 ubuntu ubuntu     5672 Jul  2 04:19 service-instance_4fb0cf25-c690-4c27-8611-69742778a44d_20200702T041945Z.log
+-rw-r--r-- 1 ubuntu ubuntu     5510 Jul  2 04:19 service-instance_13c913c2-4989-446f-b0e2-de3edaedeee7_20200702T041945Z.log
+drwx------ 2 ubuntu ubuntu     4096 Jul  2 04:22 pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z
+
+
+# PKS Control Plane Check
+ubuntu@opsmgr-02:~/bbr$ bosh -d pivotal-container-service-8ac1fa94cb5049a1bd82 is --details
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 609. Done
+
+Deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+
+Instance                                                        Process State  AZ       IPs          Deployment                                      State    VM CID                                   VM Type     Disk CIDs                                  Agent ID                              Index  Bootstrap  Ignore
+pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804  running        pks-az1  172.16.2.12  pivotal-container-service-8ac1fa94cb5049a1bd82  started  vm-70ea2350-a297-44aa-a6fe-269fb378473b  large.disk  disk-5a56e55d-3369-44eb-acc6-4b35d9a58c11  279c1515-80af-4f02-9887-2c9dfa3b74cd  0      true       false
+pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09                     running        pks-az1  172.16.2.11  pivotal-container-service-8ac1fa94cb5049a1bd82  started  vm-e3748857-522a-42aa-a845-d6965310110f  large.disk  disk-7a21eb76-7795-49ea-8229-eb333839acae  55887c9e-28e6-47cb-aa12-34b646005752  0      true       false
+
+2 instances
+
+Succeeded
+
+# Remove pks-db in vCenter ( vmid : vm-e3748857-522a-42aa-a845-d6965310110f )
+ubuntu@opsmgr-02:~/bbr$ bosh vms | grep vm-e3748857-522a-42aa-a845-d6965310110f
+pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09                   	running	pks-az1	172.16.2.11	vm-e3748857-522a-42aa-a845-d6965310110f	large.disk	true	bosh-vsphere-esxi-ubuntu-xenial-go_agent/621.71
+
+
+# After PKS DB, Check VM  => Error
+
+ubuntu@opsmgr-02:~/bbr$ bosh -d pivotal-container-service-8ac1fa94cb5049a1bd82 is
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 614. Done
+
+Deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+
+Instance                                                        Process State       AZ       IPs          Deployment
+pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804  running             pks-az1  172.16.2.12  pivotal-container-service-8ac1fa94cb5049a1bd82
+pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09                     unresponsive agent  pks-az1  172.16.2.11  pivotal-container-service-8ac1fa94cb5049a1bd82
+
+2 instances
+
+Succeeded
+ubuntu@opsmgr-02:~/bbr$
+
+
+# Check PKS Cluster Service During PKS Control Plane Error
+# K8s Service OK
+
+ubuntu@opsmgr-02:~/bbr$ kubectl config get-contexts
+CURRENT   NAME        CLUSTER     AUTHINFO                               NAMESPACE
+          my-205-01   my-205-01   b87aaa43-f92b-4528-b8d5-b548ebb75052
+          my-205-02   my-205-02   438db473-248e-4cc8-aeba-fb2658a8d0b6
+*         my-205-03   my-205-03   856d6083-73d1-46ed-a800-b2c3fa26290d
+
+ubuntu@opsmgr-02:~/bbr$ kubectl get ns
+NAME              STATUS   AGE
+default           Active   18h
+kube-node-lease   Active   18h
+kube-public       Active   18h
+kube-system       Active   18h
+nginx             Active   13m
+pks-system        Active   18h
+
+# Just Check PKS Cluster API => OK
+ubuntu@opsmgr-02:~/bbr$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+kube-system   coredns-5b6649768f-8vldr                 1/1     Running   0          17h
+kube-system   coredns-5b6649768f-jkpz8                 1/1     Running   0          17h
+kube-system   coredns-5b6649768f-nbdjn                 1/1     Running   0          17h
+kube-system   metrics-server-5d9d8b9889-s6bs8          1/1     Running   0          17h
+nginx         simplehome-deploy-74bbb54798-dtngl       1/1     Running   0          14m
+nginx         simplehome-deploy-74bbb54798-f8z4f       1/1     Running   0          14m
+nginx         simplehome-deploy-74bbb54798-tt6dv       1/1     Running   0          14m
+nginx02       simplehome-deploy-74bbb54798-59jdv       1/1     Running   0          24s
+nginx02       simplehome-deploy-74bbb54798-khnbc       1/1     Running   0          24s
+nginx02       simplehome-deploy-74bbb54798-lm7rs       1/1     Running   0          24s
+pks-system    event-controller-6969f56f88-gxvmk        2/2     Running   0          17h
+pks-system    fluent-bit-bnxr6                         2/2     Running   0          17h
+pks-system    metric-controller-5dfd968d6f-cwklx       1/1     Running   0          17h
+pks-system    observability-manager-6487c9fbf9-fhx68   1/1     Running   0          17h
+pks-system    sink-controller-7799b4f4d7-2zxgx         1/1     Running   0          17h
+pks-system    telegraf-x7dzw                           1/1     Running   0          17h
+pks-system    telemetry-agent-848b86f855-5k27f         2/2     Running   0          17h
+pks-system    validator-5787b98d57-zgjsq               1/1     Running   0          17h
+ubuntu@opsmgr-02:~/bbr$
+
+# K8s Service Discovery Check -> OK
+
+root@simplehome-deploy-74bbb54798-59jdv:/# nslookup simplehome-nginx.nginx
+Server:		10.100.200.2
+Address:	10.100.200.2#53
+
+Name:	simplehome-nginx.nginx.svc.cluster.local
+Address: 10.100.200.253
+
+root@simplehome-deploy-74bbb54798-59jdv:/# curl simplehome-nginx.nginx
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+root@simplehome-deploy-74bbb54798-59jdv:/#
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+##### 02. PKS Control Restore ######
+
+# Bosh cck
+
+ubuntu@opsmgr-02:~/bbr$ bosh -d pivotal-container-service-8ac1fa94cb5049a1bd82 -n cck
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+
+Task 615
+
+Task 615 | 04:37:01 | Scanning 2 VMs: Checking VM states (00:00:28)
+Task 615 | 04:37:29 | Scanning 2 VMs: 1 OK, 0 unresponsive, 1 missing, 0 unbound (00:00:00)
+Task 615 | 04:37:29 | Scanning 2 persistent disks: Looking for inactive disks (00:00:20)
+Task 615 | 04:37:49 | Scanning 2 persistent disks: 1 OK, 1 missing, 0 inactive, 0 mount-info mismatch (00:00:00)
+
+Task 615 Started  Thu Jul  2 04:37:01 UTC 2020
+Task 615 Finished Thu Jul  2 04:37:49 UTC 2020
+Task 615 Duration 00:00:48
+Task 615 done
+
+#   Type          Description
+53  missing_vm    VM for 'pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09 (0)' with cloud ID 'vm-e3748857-522a-42aa-a845-d6965310110f' missing.
+54  missing_disk  Disk 'disk-7a21eb76-7795-49ea-8229-eb333839acae' (pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09, 10240M) is missing
+
+2 problems
+[CLI] 2020/07/02 04:37:49 ERROR - Panic: Cannot ask for a choice in non-interactive UI
+Exit code 1
+
+# Existing Information(vm, disks) delete using Bosh cck
+ubuntu@opsmgr-02:~/bbr$ bosh -d pivotal-container-service-8ac1fa94cb5049a1bd82 cck
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+
+Task 616
+
+Task 616 | 04:39:01 | Scanning 2 VMs: Checking VM states (00:00:29)
+Task 616 | 04:39:30 | Scanning 2 VMs: 1 OK, 0 unresponsive, 1 missing, 0 unbound (00:00:00)
+Task 616 | 04:39:30 | Scanning 2 persistent disks: Looking for inactive disks (00:00:19)
+Task 616 | 04:39:49 | Scanning 2 persistent disks: 1 OK, 1 missing, 0 inactive, 0 mount-info mismatch (00:00:00)
+
+Task 616 Started  Thu Jul  2 04:39:01 UTC 2020
+Task 616 Finished Thu Jul  2 04:39:49 UTC 2020
+Task 616 Duration 00:00:48
+Task 616 done
+
+#   Type          Description
+55  missing_vm    VM for 'pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09 (0)' with cloud ID 'vm-e3748857-522a-42aa-a845-d6965310110f' missing.
+56  missing_disk  Disk 'disk-7a21eb76-7795-49ea-8229-eb333839acae' (pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09, 10240M) is missing
+
+2 problems
+
+1: Skip for now
+2: Recreate VM without waiting for processes to start
+3: Recreate VM and wait for processes to start
+4: Delete VM reference
+VM for 'pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09 (0)' with cloud ID 'vm-e3748857-522a-42aa-a845-d6965310110f' missing. (1): 4
+
+1: Skip for now
+2: Delete disk reference (DANGEROUS!)
+Disk 'disk-7a21eb76-7795-49ea-8229-eb333839acae' (pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09, 10240M) is missing (1): 2
+
+Continue? [yN]: y
+
+
+Task 617
+
+Task 617 | 04:40:21 | Applying problem resolutions: VM for 'pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09 (0)' with cloud ID 'vm-e3748857-522a-42aa-a845-d6965310110f' missing. (missing_vm 1): Delete VM reference (00:00:00)
+Task 617 | 04:40:21 | Applying problem resolutions: Disk 'disk-7a21eb76-7795-49ea-8229-eb333839acae' (pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09, 10240M) is missing (missing_disk 30): Delete disk reference (DANGEROUS!) (00:00:09)
+
+Task 617 Started  Thu Jul  2 04:40:21 UTC 2020
+Task 617 Finished Thu Jul  2 04:40:30 UTC 2020
+Task 617 Duration 00:00:09
+Task 617 done
+
+Succeeded
+ubuntu@opsmgr-02:~/bbr$
+
+
+# PKS Control Plane Redeploy
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ bosh deploy -d pivotal-container-service-8ac1fa94cb5049a1bd82 ./manifest.yml
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+
+######################################################## 100.00% 562.78 KiB/s 0s
+Task 618
+
+Task 618 | 04:42:33 | Extracting release: Extracting release (00:00:00)
+Task 618 | 04:42:33 | Verifying manifest: Verifying manifest (00:00:00)
+Task 618 | 04:42:33 | Resolving package dependencies: Resolving package dependencies (00:00:00)
+Task 618 | 04:42:33 | Processing 5 existing jobs: Processing 5 existing jobs (00:00:00)
+Task 618 | 04:42:33 | Release has been created: windows-utilities/0.11.0 (00:00:00)
+
+Task 618 Started  Thu Jul  2 04:42:33 UTC 2020
+Task 618 Finished Thu Jul  2 04:42:33 UTC 2020
+Task 618 Duration 00:00:00
+Task 618 done
+
+
+ (00:04:08)
+
+Task 639 Started  Thu Jul  2 04:44:08 UTC 2020
+Task 639 Finished Thu Jul  2 04:49:40 UTC 2020
+Task 639 Duration 00:05:32
+Task 639 done
+
+Succeeded
+
+# Check Redploy status -> OK
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ bosh -d pivotal-container-service-8ac1fa94cb5049a1bd82 is
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 640. Done
+
+Deployment 'pivotal-container-service-8ac1fa94cb5049a1bd82'
+
+Instance                                                        Process State  AZ       IPs          Deployment
+pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804  running        pks-az1  172.16.2.12  pivotal-container-service-8ac1fa94cb5049a1bd82
+pks-db/fd068905-cd98-4a8d-9978-0f481fe00b09                     running        pks-az1  172.16.2.11  pivotal-container-service-8ac1fa94cb5049a1bd82
+
+2 instances
+
+Succeeded
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$
+
+# Existing K8s Cluster Check -> OK
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl config get-contexts
+CURRENT   NAME        CLUSTER     AUTHINFO                               NAMESPACE
+          my-205-01   my-205-01   b87aaa43-f92b-4528-b8d5-b548ebb75052
+          my-205-02   my-205-02   438db473-248e-4cc8-aeba-fb2658a8d0b6
+*         my-205-03   my-205-03   856d6083-73d1-46ed-a800-b2c3fa26290d
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl get nodes
+NAME                                   STATUS   ROLES    AGE   VERSION
+773e2fbb-c443-4401-b2d3-0cbc618c9d27   Ready    <none>   17h   v1.16.7+vmware.1
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+kube-system   coredns-5b6649768f-8vldr                 1/1     Running   0          17h
+kube-system   coredns-5b6649768f-jkpz8                 1/1     Running   0          17h
+kube-system   coredns-5b6649768f-nbdjn                 1/1     Running   0          17h
+kube-system   metrics-server-5d9d8b9889-s6bs8          1/1     Running   0          17h
+nginx         simplehome-deploy-74bbb54798-dtngl       1/1     Running   0          38m
+nginx         simplehome-deploy-74bbb54798-f8z4f       1/1     Running   0          38m
+nginx         simplehome-deploy-74bbb54798-tt6dv       1/1     Running   0          38m
+nginx02       simplehome-deploy-74bbb54798-59jdv       1/1     Running   0          23m
+nginx02       simplehome-deploy-74bbb54798-khnbc       1/1     Running   0          23m
+nginx02       simplehome-deploy-74bbb54798-lm7rs       1/1     Running   0          23m
+pks-system    event-controller-6969f56f88-gxvmk        2/2     Running   0          17h
+pks-system    fluent-bit-bnxr6                         2/2     Running   0          17h
+pks-system    metric-controller-5dfd968d6f-cwklx       1/1     Running   0          17h
+pks-system    observability-manager-6487c9fbf9-fhx68   1/1     Running   0          17h
+pks-system    sink-controller-7799b4f4d7-2zxgx         1/1     Running   0          17h
+pks-system    telegraf-x7dzw                           1/1     Running   0          17h
+pks-system    telemetry-agent-848b86f855-5k27f         2/2     Running   0          17h
+pks-system    validator-5787b98d57-zgjsq               1/1     Running   0          17h
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$
+
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl config use-context my-205-02
+Switched to context "my-205-02".
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                         READY   STATUS    RESTARTS   AGE
+kube-system   coredns-5b6649768f-7clrz                     1/1     Running   0          18h
+kube-system   coredns-5b6649768f-fkdgz                     1/1     Running   0          18h
+kube-system   coredns-5b6649768f-p9884                     1/1     Running   0          18h
+kube-system   metrics-server-5d9d8b9889-trr2r              1/1     Running   0          18h
+nginx         mynginx-persistent-deploy-67799cfbf7-hff6s   1/1     Running   0          45m
+pks-system    event-controller-6969f56f88-ktngt            2/2     Running   0          18h
+pks-system    fluent-bit-jzlt4                             2/2     Running   0          18h
+pks-system    fluent-bit-lxm6x                             2/2     Running   0          18h
+pks-system    fluent-bit-mkv6f                             2/2     Running   0          18h
+pks-system    metric-controller-5dfd968d6f-jgjwx           1/1     Running   0          18h
+pks-system    observability-manager-6487c9fbf9-6lvnr       1/1     Running   0          18h
+pks-system    sink-controller-7799b4f4d7-xjmh6             1/1     Running   0          18h
+pks-system    telegraf-86shm                               1/1     Running   0          18h
+pks-system    telegraf-kmtr2                               1/1     Running   0          18h
+pks-system    telegraf-z5v5j                               1/1     Running   0          18h
+pks-system    telemetry-agent-848b86f855-dk45g             2/2     Running   0          17h
+pks-system    validator-5787b98d57-2h8zq                   1/1     Running   0          18h
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$
+
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl exec -it -n nginx mynginx-persistent-deploy-67799cfbf7-hff6s -- bash
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/# cd /data
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/data# ls
+shared
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/data# cd shared/
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/data/shared# ls
+0702.txt  lost+found
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/data/shared#
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/data/shared# ls -lrt
+total 20
+drwx------ 2 root root 16384 Jul  2 04:10 lost+found
+-rw-r--r-- 1 root root    18 Jul  2 04:11 0702.txt
+root@mynginx-persistent-deploy-67799cfbf7-hff6s:/data/shared#
+
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl config use-context my-205-01
+Switched to context "my-205-01".
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                     READY   STATUS    RESTARTS   AGE
+0702          simplehome-deploy-74bbb54798-6ghqc       1/1     Running   0          114m
+0702          simplehome-deploy-74bbb54798-dgj5p       1/1     Running   0          114m
+0702          simplehome-deploy-74bbb54798-fx7mg       1/1     Running   0          114m
+kube-system   coredns-5b6649768f-9ds7f                 1/1     Running   0          18h
+kube-system   coredns-5b6649768f-lnrjl                 1/1     Running   0          18h
+kube-system   coredns-5b6649768f-pg8t2                 1/1     Running   0          18h
+kube-system   metrics-server-5d9d8b9889-n84ng          1/1     Running   0          18h
+pks-system    event-controller-6969f56f88-ckx5r        2/2     Running   0          18h
+pks-system    fluent-bit-4mnpf                         2/2     Running   0          18h
+pks-system    fluent-bit-rkwv4                         2/2     Running   0          18h
+pks-system    fluent-bit-zsf5j                         2/2     Running   0          18h
+pks-system    metric-controller-5dfd968d6f-5vpcx       1/1     Running   0          18h
+pks-system    observability-manager-6487c9fbf9-tkxsq   1/1     Running   0          18h
+pks-system    sink-controller-7799b4f4d7-b88tf         1/1     Running   0          18h
+pks-system    telegraf-89kcr                           1/1     Running   0          18h
+pks-system    telegraf-h22c9                           1/1     Running   0          18h
+pks-system    telegraf-p8bdj                           1/1     Running   0          18h
+pks-system    telemetry-agent-778fc8997d-bvlz2         2/2     Running   0          17h
+pks-system    validator-5787b98d57-lbj8c               1/1     Running   0          18h
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$
+
+
+# PKS Control Plane login -> Error
+# Important > Need Restore from backed artifact
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$ pks login -a $PKS_API -u dbha -k
+
+Password: *********
+Error: Credentials were rejected, please try again.
+
+ubuntu@opsmgr-02:~/bbr/pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z$
+
+
+# Start PKS Control Plane
+# Important : Please Check PKS Control Plane Artifact
+
+ubuntu@opsmgr-02:~/bbr$ cat bbr_pks_control_restore.sh
+
+#BOSH_CLIENT_SECRET=BOSH-CLIENT-SECRET \
+#nohup bbr deployment  --target BOSH-TARGET \
+#--username BOSH-CLIENT  --deployment DEPLOYMENT-NAME \
+#--ca-cert PATH-TO-BOSH-SERVER-CERT \
+#restore \
+#--artifact-path PATH-TO-DEPLOYMENT-BACKUP
+
+nohup bbr deployment \
+--target 172.16.1.11 \
+--username $BOSH_CLIENT \
+--deployment pivotal-container-service-8ac1fa94cb5049a1bd82 \
+--ca-cert ./bosh_ca.crt \
+restore \
+--artifact-path ./pivotal-container-service-8ac1fa94cb5049a1bd82_20200702T042155Z
+ubuntu@opsmgr-02:~/bbr$
+
+# Check log
+
+ubuntu@opsmgr-02:~/bbr$ cat nohup.out
+[bbr] 2020/07/02 05:01:58 INFO - Starting restore of pivotal-container-service-8ac1fa94cb5049a1bd82...
+[bbr] 2020/07/02 05:01:58 INFO - Validating backup artifact for pivotal-container-service-8ac1fa94cb5049a1bd82...
+[bbr] 2020/07/02 05:01:58 INFO - Looking for scripts
+[bbr] 2020/07/02 05:02:01 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/post-backup-unlock
+[bbr] 2020/07/02 05:02:01 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/post-restore-unlock
+[bbr] 2020/07/02 05:02:01 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/pre-backup-lock
+[bbr] 2020/07/02 05:02:01 INFO - pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804/uaa/pre-restore-lock
+
+[bbr] 2020/07/02 05:02:26 INFO - Completed restore of pivotal-container-service-8ac1fa94cb5049a1bd82
+[bbr] 2020/07/02 05:02:26 INFO - Running post-restore-unlock scripts...
+[bbr] 2020/07/02 05:02:26 INFO - Unlocking uaa on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 05:02:56 INFO - Finished unlocking uaa on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804.
+[bbr] 2020/07/02 05:02:56 INFO - Unlocking pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804...
+[bbr] 2020/07/02 05:04:03 INFO - Finished unlocking pks-api on pivotal-container-service/2b0a4d3c-b262-4d8d-b81a-5518e3e8d804.
+[bbr] 2020/07/02 05:04:03 INFO - Finished running post-restore-unlock scripts.
+
+# retry PKS API login -> OK
+
+ubuntu@opsmgr-02:~/bbr$ pks login -a $PKS_API -u dbha -k
+
+Password: *********
+API Endpoint: api.run.haas-205.pez.pivotal.io
+User: dbha
+Login successful.
