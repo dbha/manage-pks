@@ -1,0 +1,254 @@
+##############################
+## 01. BBR Backup
+## 02. Master VM Delete
+## 03. Bosh cck
+## 04. Redeploy Cluster
+## 05. Restart Worker Node
+## 06. PKS Cluster Upgrade
+## 07. BBR Restore
+## 08. Check Cluster NS / Pod
+##############################
+
+## 01. BBR Backup
+
+# precheck
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ ./bbr_deployment_cluster_pez-pks02_precheck.sh
+[bbr] 2020/07/02 11:47:09 INFO - Looking for scripts
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/backup
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/metadata
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/post-restore-unlock
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/pre-restore-lock
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/restore
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-kube-apiserver/post-restore-unlock
+[bbr] 2020/07/02 11:47:12 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-kube-apiserver/pre-restore-lock
+[bbr] 2020/07/02 11:47:14 INFO - Running pre-checks for backup of service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6...
+[11:47:15] Deployment 'service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6' can be backed up.
+
+# bbr backup
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ ./bbr_deployment_cluster_pez-pks01_backup.sh
+[bbr] 2020/07/02 11:48:14 INFO - Looking for scripts
+[bbr] 2020/07/02 11:48:18 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/backup
+[bbr] 2020/07/02 11:48:18 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/metadata
+[bbr] 2020/07/02 11:48:18 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/post-restore-unlock
+[bbr] 2020/07/02 11:48:18 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/pre-restore-lock
+[bbr] 2020/07/02 11:48:18 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/restore
+....
+[bbr] 2020/07/02 11:48:28 INFO - Finished validity checks -- for job bbr-etcd-cfcr-etcd-backup-one-restore-all on master/dabe5bc1-736b-409f-8939-0bafd53177c4...
+[bbr] 2020/07/02 11:48:28 INFO - Backup created of service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6 on 2020-07-02 11:48:28.31474169 +0000 UTC m=+6.742149842
+
+# Check backup Artifact
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ ls -lrt
+drwx------ 2 ubuntu ubuntu     4096 Jul  2 11:48 service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z
+
+
+## 02. Master VM Delete
+Delete VM in vCenter
+
+# After Delete VM, Check SI
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ bosh -d service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6 is --details
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Task 17490. Done
+
+Deployment 'service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6'
+
+Instance                                           Process State       AZ       IPs         Deployment                                             State    VM CID                                   VM Type      Disk CIDs                                  Agent ID                              Index  Bootstrap  Ignore
+apply-addons/c968b612-8d1d-416e-b94f-6a731ccc98ae  -                   pks-az1  -           service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  -                                        micro        -                                          -                                     0      true       false
+master/dabe5bc1-736b-409f-8939-0bafd53177c4        unresponsive agent  pks-az1  172.28.4.2  service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  vm-1107b173-0f4a-4fad-8c72-cacf0f38350a  medium.disk  disk-59c9285c-1bf7-4a2e-89b4-358e99dd59c3  7bf7ec19-b4ed-473c-9914-ce33c5bf387f  0      true       false
+worker/0fc2a2e2-d22c-4527-bf6f-8064ae5230a1        running             pks-az1  172.28.4.3  service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  vm-39a9e455-f2e9-44c0-868c-a32013522f9f  medium.disk  disk-df225711-b8d4-4783-a8cc-65cf7e1ba0e5  f5c4b5e7-ae50-4740-bea7-8990437be54e  0      true       false
+worker/b56cacbf-a59b-4e2f-8a00-a8eb5f4f03c6        running             pks-az2  172.28.4.4  service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  vm-0243b275-227a-49da-82b8-e132d5c7d0e7  medium.disk  disk-df92fa05-5b48-418d-a786-101f6bb1f324  d5582720-1a84-4b51-acaf-e4631039c4bd  1      false      false
+
+4 instances
+
+Succeeded
+
+## 03. Bosh cck
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ bosh -d service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6 cck
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6'
+
+Task 17493
+
+Task 17493 | 11:52:30 | Scanning 3 VMs: Checking VM states (00:00:31)
+Task 17493 | 11:53:01 | Scanning 3 VMs: 2 OK, 0 unresponsive, 1 missing, 0 unbound (00:00:00)
+Task 17493 | 11:53:01 | Scanning 3 persistent disks: Looking for inactive disks (00:00:36)
+Task 17493 | 11:53:37 | Scanning 3 persistent disks: 2 OK, 1 missing, 0 inactive, 0 mount-info mismatch (00:00:00)
+
+Task 17493 Started  Thu Jul  2 11:52:30 UTC 2020
+Task 17493 Finished Thu Jul  2 11:53:37 UTC 2020
+Task 17493 Duration 00:01:07
+Task 17493 done
+
+#   Type          Description
+34  missing_vm    VM for 'master/dabe5bc1-736b-409f-8939-0bafd53177c4 (0)' with cloud ID 'vm-1107b173-0f4a-4fad-8c72-cacf0f38350a' missing.
+35  missing_disk  Disk 'disk-59c9285c-1bf7-4a2e-89b4-358e99dd59c3' (master/dabe5bc1-736b-409f-8939-0bafd53177c4, 10240M) is missing
+
+2 problems
+
+1: Skip for now
+2: Recreate VM without waiting for processes to start
+3: Recreate VM and wait for processes to start
+4: Delete VM reference
+VM for 'master/dabe5bc1-736b-409f-8939-0bafd53177c4 (0)' with cloud ID 'vm-1107b173-0f4a-4fad-8c72-cacf0f38350a' missing. (1): 4
+
+1: Skip for now
+2: Delete disk reference (DANGEROUS!)
+Disk 'disk-59c9285c-1bf7-4a2e-89b4-358e99dd59c3' (master/dabe5bc1-736b-409f-8939-0bafd53177c4, 10240M) is missing (1): 2
+
+Continue? [yN]: y
+
+Task 17496
+.....
+.....
+
+## 04. Redeploy Cluster
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ bosh deploy -d service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6 ./manifest.yml
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6'
+
+Continue? [yN]: y
+
+Task 17498
+Deployment 'service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6'
+
+Instance                                           Process State  AZ       IPs         Deployment                                             State    VM CID                                   VM Type      Disk CIDs                                  Agent ID                              Index  Bootstrap  Ignore
+apply-addons/c968b612-8d1d-416e-b94f-6a731ccc98ae  -              pks-az1  -           service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  -                                        micro        -                                          -                                     0      true       false
+master/dabe5bc1-736b-409f-8939-0bafd53177c4        running        pks-az1  172.28.4.2  service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  vm-02054a79-6612-499c-8b69-3e5c6d28b14e  medium.disk  disk-14d36c05-1a57-4046-982a-3fcead453c44  452a8fbc-b5e6-40dc-9747-a98ec5e7d499  0      true       false
+worker/0fc2a2e2-d22c-4527-bf6f-8064ae5230a1        running        pks-az1  172.28.4.3  service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  vm-39a9e455-f2e9-44c0-868c-a32013522f9f  medium.disk  disk-df225711-b8d4-4783-a8cc-65cf7e1ba0e5  f5c4b5e7-ae50-4740-bea7-8990437be54e  0      true       false
+worker/b56cacbf-a59b-4e2f-8a00-a8eb5f4f03c6        running        pks-az2  172.28.4.4  service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6  started  vm-0243b275-227a-49da-82b8-e132d5c7d0e7  medium.disk  disk-df92fa05-5b48-418d-a786-101f6bb1f324  d5582720-1a84-4b51-acaf-e4631039c4bd  1      false      false
+
+4 instances
+
+Succeeded
+
+# Check PKS Cluster pez-pks02
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ pks get-credentials pez-pks02
+
+
+## 05. Restart Worker Node
+
+# No Available Worker Node
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ kubectl get nodes
+No resources found in default namespace.
+
+# Restart Worker node
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ bosh -d service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6 restart worker
+Using environment '172.16.1.11' as client 'ops_manager'
+
+Using deployment 'service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6'
+
+Continue? [yN]: y
+
+Task 17510
+
+Task 17510 | 12:05:05 | Deprecation: Global 'properties' are deprecated. Please define 'properties' at the job level.
+Task 17510 | 12:05:05 | Preparing deployment: Preparing deployment (00:00:02)
+Task 17510 | 12:05:07 | Preparing deployment: Rendering templates (00:00:08)
+Task 17510 | 12:05:15 | Preparing package compilation: Finding packages to compile (00:00:00)
+Task 17510 | 12:05:16 | Updating instance worker: worker/0fc2a2e2-d22c-4527-bf6f-8064ae5230a1 (0) (canary) (00:01:58)
+Task 17510 | 12:07:14 | Updating instance worker: worker/b56cacbf-a59b-4e2f-8a00-a8eb5f4f03c6 (1) (00:02:01)
+
+Task 17510 Started  Thu Jul  2 12:05:05 UTC 2020
+Task 17510 Finished Thu Jul  2 12:09:15 UTC 2020
+Task 17510 Duration 00:04:10
+Task 17510 done
+
+Succeeded
+
+## 06. PKS Cluster Upgrade
+
+# Check pez-pks02 Cluster ( Just Redeploy..)
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ kubectl get nodes
+NAME                                   STATUS   ROLES    AGE     VERSION
+d5582720-1a84-4b51-acaf-e4631039c4bd   Ready    <none>   71s     v1.16.7+vmware.1
+f5c4b5e7-ae50-4740-bea7-8990437be54e   Ready    <none>   3m12s   v1.16.7+vmware.1
+
+# Just Basic Cluster
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ kubectl get ns
+NAME              STATUS   AGE
+default           Active   10m
+kube-node-lease   Active   10m
+kube-public       Active   10m
+kube-system       Active   10m
+
+# pez-pks02 upgrade using PKS CLI
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ pks upgrade-cluster pez-pks02
+
+You are about to upgrade pez-pks02.
+Warning: This operation may be long running and may block further operations on the cluster(s) until complete
+
+Continue? (y/n):y
+Your taskID for the upgrade task is: 88725c4f-c595-457a-8173-8815b4d1b4b7
+
+# Check upgrade
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ pks clusters
+
+PKS Version     Name         k8s Version  Plan Name      UUID                                  Status     Action
+1.7.0-build.26  pez-pks02    1.16.7       small          924c23a4-2c30-49f7-8ea3-48548c06f8f6  succeeded  UPGRADE
+
+# Check Cluster
+# During upgrade, Create pks-system using apply-addons process
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr/service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6_20200702T114821Z$ kubectl get ns
+NAME              STATUS   AGE
+default           Active   16m
+kube-node-lease   Active   16m
+kube-public       Active   16m
+kube-system       Active   16m
+pks-system        Active   2m44s
+
+## 07. BBR Restore
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ ./bbr_deployment_pks_cluster_pez-pks02_restore.sh
+[bbr] 2020/07/02 12:18:34 INFO - Starting restore of service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6...
+[bbr] 2020/07/02 12:18:34 INFO - Validating backup artifact for service-instance_924c23a4-2c30-49f7-8ea3-48548c06f8f6...
+[bbr] 2020/07/02 12:18:34 INFO - Looking for scripts
+[bbr] 2020/07/02 12:18:38 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/backup
+[bbr] 2020/07/02 12:18:38 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/metadata
+[bbr] 2020/07/02 12:18:38 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/post-restore-unlock
+[bbr] 2020/07/02 12:18:38 INFO - master/dabe5bc1-736b-409f-8939-0bafd53177c4/bbr-etcd/pre-restore-lock
+.....
+[bbr] 2020/07/02 12:18:59 INFO - Unlocking bbr-etcd on master/dabe5bc1-736b-409f-8939-0bafd53177c4...
+[bbr] 2020/07/02 12:19:14 INFO - Finished unlocking bbr-etcd on master/dabe5bc1-736b-409f-8939-0bafd53177c4.
+[bbr] 2020/07/02 12:19:14 INFO - Unlocking bbr-kube-apiserver on master/dabe5bc1-736b-409f-8939-0bafd53177c4...
+[bbr] 2020/07/02 12:19:29 INFO - Finished unlocking bbr-kube-apiserver on master/dabe5bc1-736b-409f-8939-0bafd53177c4.
+[bbr] 2020/07/02 12:19:29 INFO - Finished running post-restore-unlock scripts.
+
+## 08. Check Cluster NS / Pod
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ kubectl get ns
+NAME              STATUS   AGE
+default           Active   96m
+kube-node-lease   Active   96m
+kube-public       Active   96m
+kube-system       Active   96m
+nginx-pv          Active   46m
+pks-system        Active   87m
+velero            Active   72m
+
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ kubectl get po --all-namespaces
+NAMESPACE     NAME                                                            READY   STATUS      RESTARTS   AGE
+kube-system   coredns-5b6649768f-h8krj                                        1/1     Running     0          88m
+kube-system   coredns-5b6649768f-mwwnm                                        1/1     Running     0          88m
+kube-system   coredns-5b6649768f-xtmr8                                        1/1     Running     0          88m
+kube-system   metrics-server-5d9d8b9889-rvt75                                 1/1     Running     0          87m
+nginx-pv      mynginx-persistent-deploy-bb9d9fbb-vhns4                        1/1     Running     0          46m
+pks-system    cert-generator-1311f65a5dfa4bf6774ba070152672eacdb3e6b2-fspw9   0/1     Completed   0          87m
+pks-system    metric-controller-8578dc755b-8hx4z                              1/1     Running     0          19s
+pks-system    node-exporter-5fk5q                                             1/1     Running     0          87m
+pks-system    node-exporter-j27k6                                             1/1     Running     0          87m
+pks-system    observability-manager-7fcc589965-rdhgz                          1/1     Running     0          87m
+pks-system    telegraf-7g52w                                                  1/1     Running     0          19s
+pks-system    telegraf-h8j86                                                  1/1     Running     0          19s
+pks-system    telemetry-agent-778fc8997d-6dgjx                                2/2     Running     0          87m
+pks-system    validator-556555bf9b-7t6dn                                      1/1     Running     0          19s
+velero        restic-jb5v4                                                    1/1     Running     0          71m
+velero        restic-rlblt                                                    1/1     Running     0          71m
+velero        velero-6b4674898-grwhh                                          1/1     Running     0          72m
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/bbr$ kubectl exec -it -n nginx-pv mynginx-persistent-deploy-bb9d9fbb-vhns4 -- cat /data/shared/testfile
+This is test files
+
+
+

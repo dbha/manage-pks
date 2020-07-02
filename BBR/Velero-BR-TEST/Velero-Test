@@ -14,17 +14,13 @@ ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks create-cluster pez-pks02 --ex
 ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks clusters
 
 PKS Version     Name         k8s Version  Plan Name      UUID                                  Status       Action
-1.7.0-build.26  pez-pks01    1.16.7       small          6f6eb3cd-590a-4e81-9ce6-e71ebe660f93  succeeded    UPGRADE
 1.7.0-build.26  pez-pks02    1.16.7       small          924c23a4-2c30-49f7-8ea3-48548c06f8f6  in progress  CREATE
-1.7.0-build.26  pez-3master  1.16.7       small-3master  ee5b2a9e-5fae-4706-be93-26399664d0d5  succeeded    UPGRADE
 
 
 ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks clusters
 
 PKS Version     Name         k8s Version  Plan Name      UUID                                  Status     Action
-1.7.0-build.26  pez-pks01    1.16.7       small          6f6eb3cd-590a-4e81-9ce6-e71ebe660f93  succeeded  UPGRADE
 1.7.0-build.26  pez-pks02    1.16.7       small          924c23a4-2c30-49f7-8ea3-48548c06f8f6  succeeded  CREATE
-1.7.0-build.26  pez-3master  1.16.7       small-3master  ee5b2a9e-5fae-4706-be93-26399664d0d5  succeeded  UPGRADE
 
 ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/pks$ pks cluster pez-pks02
 
@@ -278,5 +274,3 @@ mynginx-persistent-deploy-bb9d9fbb-vhns4   1/1     Running   0          91s
 
 ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl exec -it -n nginx-pv mynginx-persistent-deploy-bb9d9fbb-vhns4 -- cat /data/shared/testfile
 This is test files
-
-
