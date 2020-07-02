@@ -49,7 +49,9 @@ NAME                                   STATUS   ROLES    AGE   VERSION
 d5582720-1a84-4b51-acaf-e4631039c4bd   Ready    <none>   16m   v1.16.7+vmware.1
 f5c4b5e7-ae50-4740-bea7-8990437be54e   Ready    <none>   19m   v1.16.7+vmware.1
 
-## 02. Velero Install(Restic)
+## 02. Velero Install(Restic) with minio
+# minio already was created by bosh deploy.
+
 ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/velero/velero-v1.4.0-linux-amd64$ velero install  --provider aws --bucket velero --secret-file ./credentials-velero --use-volume-snapshots=false --plugins velero/velero-plugin-for-aws:v1.0.1  --use-restic --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://172.16.1.14:9000,publicUrl=http://172.16.1.14:9000
 CustomResourceDefinition/backups.velero.io: attempting to create resource
 CustomResourceDefinition/backups.velero.io: created
@@ -276,4 +278,5 @@ mynginx-persistent-deploy-bb9d9fbb-vhns4   1/1     Running   0          91s
 
 ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml$ kubectl exec -it -n nginx-pv mynginx-persistent-deploy-bb9d9fbb-vhns4 -- cat /data/shared/testfile
 This is test files
+
 
