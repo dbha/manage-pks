@@ -1,0 +1,167 @@
+
+
+### 01. generate CA private key:: openssl genrsa -aes256 -out ca.key 4096
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ openssl genrsa -aes256 -out ca.key 4096
+Generating RSA private key, 4096 bit long modulus
+..............................................................................++
+..............................................................................................................................................................................................................++
+e is 65537 (0x10001)
+Enter pass phrase for ca.key: xxxxx
+Verifying - Enter pass phrase for ca.key: xxxxx
+
+
+### 02. generate CA certificate:: openssl req -key ca.key -new -x509 -days 365 -sha256 -extensions v3_ca -out ca.crt
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ openssl req -key ca.key -new -x509 -days 365 -sha256 -extensions v3_ca -out ca.crt
+Enter pass phrase for ca.key:
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:KR
+State or Province Name (full name) [Some-State]:Seoul
+Locality Name (eg, city) []:Seoul
+Organization Name (eg, company)
+[Internet Widgits Pty Ltd]:IT
+Organizational Unit Name (eg, section) []:MAPBU
+Common Name (e.g. server FQDN or YOUR name) []:cafe.example.com
+Email Address []:dbha0719@example.com
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ ls -lrt
+-rw-rw-r-- 1 ubuntu ubuntu 3326 Jul  3 07:26 ca.key
+-rw-rw-r-- 1 ubuntu ubuntu 2110 Jul  3 07:28 ca.crt
+
+### 03. generate server certificate request and private key:: openssl req -out server.csr -new -newkey rsa:2048 -nodes -keyout server.key
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$  openssl req -out server.csr -new -newkey rsa:2048 -nodes -keyout server.key
+Generating a 2048 bit RSA private key
+.......................................+++
+............+++
+writing new private key to 'server.key'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:KR
+State or Province Name (full name) [Some-State]:Seoul
+Locality Name (eg, city) []:Seoul
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:IT
+Organizational Unit Name (eg, section) []:MAPUB
+Common Name (e.g. server FQDN or YOUR name) []:cafe.example.com
+Email Address []:dbha0719@example.com
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ ls -lrt
+-rw-rw-r-- 1 ubuntu ubuntu 3326 Jul  3 07:26 ca.key
+-rw-rw-r-- 1 ubuntu ubuntu 2110 Jul  3 07:28 ca.crt
+-rw-rw-r-- 1 ubuntu ubuntu 1704 Jul  3 07:30 server.key
+-rw-rw-r-- 1 ubuntu ubuntu 1054 Jul  3 07:30 server.csr
+
+### 04. sign the CSR with CA certificate:: openssl x509 -req -days 360 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -sha256
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ openssl x509 -req -days 360 -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -sha256
+Signature ok
+subject=/C=KR/ST=Seoul/L=Seoul/O=IT/OU=MAPUB/CN=cafe.example.com/emailAddress=dbha0719@example.com
+Getting CA Private Key
+Enter pass phrase for ca.key: xxxxx
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ ls -lrt
+-rw-rw-r-- 1 ubuntu ubuntu 3326 Jul  3 07:26 ca.key
+-rw-rw-r-- 1 ubuntu ubuntu 2110 Jul  3 07:28 ca.crt
+-rw-rw-r-- 1 ubuntu ubuntu 1704 Jul  3 07:30 server.key
+-rw-rw-r-- 1 ubuntu ubuntu 1054 Jul  3 07:30 server.csr
+-rw-rw-r-- 1 ubuntu ubuntu   17 Jul  3 07:32 ca.srl
+-rw-rw-r-- 1 ubuntu ubuntu 1647 Jul  3 07:32 server.crt
+
+### 05. Create secret tls
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$  kubectl create secret tls cafe-secret --key server.key --cert server.crt
+secret/cafe-secret created
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ kubectl describe secret cafe-secret
+Name:         cafe-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  kubernetes.io/tls
+
+Data
+====
+tls.key:  1704 bytes
+tls.crt:  1647 bytes
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ kubectl get secret cafe-secret
+NAME          TYPE                DATA   AGE
+cafe-secret   kubernetes.io/tls   2      23s
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ kubectl describe secret cafe-secret
+Name:         cafe-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  kubernetes.io/tls
+
+Data
+====
+tls.crt:  1647 bytes
+tls.key:  1704 bytes
+
+### 06. Deploy App
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ kubectl apply -f cafe.yaml
+deployment.apps/coffee created
+service/coffee-svc created
+deployment.apps/tea created
+service/tea-svc created
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ kubectl get po
+NAME                     READY   STATUS    RESTARTS   AGE
+coffee-ff7594dc7-65jgq   1/1     Running   0          4s
+coffee-ff7594dc7-74lmx   1/1     Running   0          4s
+tea-b59cc8fdf-5krfq      1/1     Running   0          4s
+tea-b59cc8fdf-m9b4x      1/1     Running   0          4s
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ kubectl get svc
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+coffee-svc   ClusterIP   10.100.200.238   <none>        80/TCP    31s
+kubernetes   ClusterIP   10.100.200.1     <none>        443/TCP   20h
+tea-svc      ClusterIP   10.100.200.92    <none>        80/TCP    31s
+
+### 07. Register hosts
+
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ cat /etc/hosts | grep cafe.example.com
+10.195.20.131 cafe.example.com
+
+
+### 08. Test
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ curl https://cafe.example.com/tea -k
+Server address: 172.24.28.5:80
+Server name: tea-b59cc8fdf-5krfq
+Date: 03/Jul/2020:07:47:33 +0000
+URI: /tea
+Request ID: 9574469bc53d535efef6db2995fb952c
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ curl https://cafe.example.com/tea -k
+Server address: 172.24.28.4:80
+Server name: tea-b59cc8fdf-m9b4x
+Date: 03/Jul/2020:07:47:35 +0000
+URI: /tea
+Request ID: 262bb80b28d98d54fa9892eb88179ed5
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ curl https://cafe.example.com/coffee -k
+Server address: 172.24.28.3:80
+Server name: coffee-ff7594dc7-74lmx
+Date: 03/Jul/2020:07:47:40 +0000
+URI: /coffee
+Request ID: 7f79ed37bd6cbf9bf4bee26b70c9cb26
+ubuntu@opsmgr-02-haas-252-pez-pivotal-i:~/yaml/cafe$ curl https://cafe.example.com/coffee -k
+Server address: 172.24.28.2:80
+Server name: coffee-ff7594dc7-65jgq
+Date: 03/Jul/2020:07:47:42 +0000
+URI: /coffee
+Request ID: 5c801f4a111c5b902adfc2ccb2a27fec
+
