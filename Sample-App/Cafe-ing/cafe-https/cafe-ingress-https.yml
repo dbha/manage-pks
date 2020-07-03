@@ -3,8 +3,13 @@ kind: Ingress
 metadata:
   name: cafe-ingress
 spec:
+spec:
+  tls:
+    - hosts:
+        - cafe.example.com
+      secretName: cafe-secret
   rules:
-    - host: cafe.pksdemo.net
+    - host: cafe.example.com
       http:
         paths:
           - path: /tea
