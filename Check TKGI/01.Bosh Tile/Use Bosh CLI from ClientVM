@@ -1,0 +1,29 @@
+### Bosh Env - Use Bosh CLI from Client VM
+
+# 01. Retrieve Bosh environment variables:
+BOSH tile > Credentials > Bosh Commandline Credentials
+
+# 02. Retrieve Ops Manager cert:
+scp ubuntu@10.0.0.2:/var/tempest/workspaces/default/root_ca_certificate .
+ubuntu@10.0.0.2's password:
+
+ubuntu@ubuntu-252:~$ scp ubuntu@opsmgr-02.haas-252.pez.pivotal.io:/var/tempest/workspaces/default/root_ca_certificate .
+Unauthorized use is strictly prohibited. All access and activity
+is subject to logging and monitoring.
+root_ca_certificate                                                                                                                                  100% 1208   901.9KB/s   00:00
+ubuntu@ubuntu-252:~$
+
+# 03. bosh env
+
+ubuntu@ubuntu-252:~$ mkdir BOSH_CLIENT
+ubuntu@ubuntu-252:~/BOSH_CLIENT$ mv ../root_ca_certificate .
+
+ubuntu@ubuntu-252:~/BOSH_CLIENT$ cat BOSH-ENV.sh
+export BOSH_CLIENT=ops_manager
+export BOSH_CLIENT_SECRET=rk-q-VlKxhniVapwkN11F-i_XLCscwWL
+export BOSH_CA_CERT=/root/BOSH_CLIENT/root_ca_certificate
+export BOSH_ENVIRONMENT=172.16.1.11
+ubuntu@ubuntu-252:~/BOSH_CLIENT$
+
+buntu@ubuntu-252:~/BOSH_CLIENT$ source BOSH-ENV.sh
+ubuntu@ubuntu-252:~/BOSH_CLIENT$ bosh env

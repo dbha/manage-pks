@@ -1,0 +1,190 @@
+#########################################################
+### 01. Push Image in harbor
+### 02. helm install
+### 03. create secret for docker-registry
+### 04. git clone https://github.com/helm/charts.git
+### 05. Create custom-values.yaml
+### 03. Check Helm CLI
+
+
+
+### 06. Check Deploy
+#########################################################
+
+### 01. Push Image in harbor
+
+# Execute Local
+ ./prom_operator_images_harbor.sh operator_images
+operator_images
+v1.9.5: Pulling from coreos/kube-state-metrics
+Digest: sha256:9d29333ad1cc8e14b26e40daea3739cec21b765f6077c6764546779deec3f54b
+Status: Image is up to date for quay.io/coreos/kube-state-metrics:v1.9.5
+quay.io/coreos/kube-state-metrics:v1.9.5
+The push refers to repository [harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-state-metrics]
+ea9bf440baf1: Layer already exists
+0d1435bd79e4: Layer already exists
+v1.9.5: digest: sha256:9d29333ad1cc8e14b26e40daea3739cec21b765f6077c6764546779deec3f54b size: 738
+v0.20.0: Pulling from prometheus/alertmanager
+Digest: sha256:7e4e9f7a0954b45736d149c40e9620a6664036bb05f0dce447bef5042b139f5d
+Status: Image is up to date for quay.io/prometheus/alertmanager:v0.20.0
+quay.io/prometheus/alertmanager:v0.20.0
+The push refers to repository [harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/alertmanager]
+.....
+.....
+
+### 02. helm install
+ubuntu@opsmgr-02:~$ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+ubuntu@opsmgr-02:~$ chmod 700 get_helm.sh
+ubuntu@opsmgr-02:~$ ./get_helm.sh
+Downloading https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
+ubuntu@opsmgr-02:~$ helm version
+version.BuildInfo{Version:"v3.2.4", GitCommit:"0ad800ef43d3b826f31a5ad8dfbb4fe05d143688", GitTreeState:"clean", GoVersion:"go1.13.12"}
+
+ubuntu@opsmgr-02:~$ kubectl get nodes
+NAME                                   STATUS   ROLES    AGE     VERSION
+272126b2-2370-4306-9493-51576c504ab0   Ready    <none>   6h15m   v1.16.7+vmware.1
+
+### 03. create secret for docker-registry
+
+#kubectl create secret docker-registry regcred --docker-server=<your-registry-server>  \
+#--docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
+
+kubectl create secret docker-registry regcred --docker-server=harbor.run.haas-205.pez.pivotal.io  \
+--docker-username=dbha --docker-password='!Habbi*819' --docker-email=dha@vmware.com
+
+
+### 03. create secret for docker-registry
+ubuntu@opsmgr-02:~$ kubectl get secrets | grep regcred
+regcred                                            kubernetes.io/dockerconfigjson        1      35s
+
+
+### 04. Git clone charts
+ubuntu@opsmgr-02:~$ git clone https://github.com/helm/charts.git
+Cloning into 'charts'...
+remote: Enumerating objects: 24, done.
+remote: Counting objects: 100% (24/24), done.
+remote: Compressing objects: 100% (22/22), done.
+remote: Total 109278 (delta 5), reused 3 (delta 2), pack-reused 109254
+Receiving objects: 100% (109278/109278), 30.04 MiB | 12.75 MiB/s, done.
+Resolving deltas: 100% (81757/81757), done.
+Checking connectivity... done.
+
+ubuntu@opsmgr-02:~$ cd charts/stable/prometheus-operator
+ubuntu@opsmgr-02:~/charts/stable/prometheus-operator$ ls -lrt
+total 176
+-rw-rw-r-- 1 ubuntu ubuntu 75084 Jul  6 11:23 README.md
+-rw-rw-r-- 1 ubuntu ubuntu    96 Jul  6 11:23 OWNERS
+-rw-rw-r-- 1 ubuntu ubuntu   658 Jul  6 11:23 CONTRIBUTING.md
+drwxrwxr-x 2 ubuntu ubuntu  4096 Jul  6 11:23 ci
+-rw-rw-r-- 1 ubuntu ubuntu   705 Jul  6 11:23 Chart.yaml
+-rw-rw-r-- 1 ubuntu ubuntu   468 Jul  6 11:23 requirements.yaml
+-rw-rw-r-- 1 ubuntu ubuntu   457 Jul  6 11:23 requirements.lock
+drwxrwxr-x 3 ubuntu ubuntu  4096 Jul  6 11:23 hack
+drwxrwxr-x 2 ubuntu ubuntu  4096 Jul  6 11:23 crds
+drwxrwxr-x 7 ubuntu ubuntu  4096 Jul  6 11:23 templates
+-rw-rw-r-- 1 ubuntu ubuntu 64225 Jul  6 11:23 values.yaml
+
+
+
+
+# Edit requirements.yaml
+ubuntu@opsmgr-02:~/charts/stable/prometheus-operator$ cat requirements.yaml
+dependencies:
+
+  - name: kube-state-metrics
+    version: "2.8.*"
+    repository: https://kubernetes-charts.storage.googleapis.com/
+    condition: kubeStateMetrics.enabled
+
+  - name: prometheus-node-exporter
+    version: "1.9.*"
+    repository: https://kubernetes-charts.storage.googleapis.com/
+    condition: nodeExporter.enabled
+
+  - name: grafana
+    version: "5.0.*"
+    repository: https://kubernetes-charts.storage.googleapis.com/
+    condition: grafana.enabled
+
+ubuntu@opsmgr-02:~/charts/stable/prometheus-operator$ helm dependency update
+Saving 3 charts
+Downloading kube-state-metrics from repo https://kubernetes-charts.storage.googleapis.com/
+Downloading prometheus-node-exporter from repo https://kubernetes-charts.storage.googleapis.com/
+Downloading grafana from repo https://kubernetes-charts.storage.googleapis.com/
+Deleting outdated charts
+
+
+### 05. Create custom-values.yaml
+cat <<EOF > custom-values.yaml
+global:
+  imagePullSecrets:
+  - name: regcred
+
+prometheusOperator:
+  image:
+    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus-operator
+    tag: v0.38.1
+  tlsProxy:
+    image:
+      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/ghostunnel
+      tag: v1.5.2
+  prometheusConfigReloaderImage:
+    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus-config-reloader
+    tag: v0.38.1
+  configmapReloadImage:
+    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/configmap-reload
+    tag: v0.3.0
+  admissionWebhooks:
+     patch:
+       image:
+         repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-webhook-certgen
+         tag: v1.2.0
+
+alertmanager:
+  alertmanagerSpec:
+    image:
+      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/alertmanager
+      tag: v0.20.0
+
+prometheus:
+  prometheusSpec:
+    image:
+      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus
+      tag: v2.17.2
+
+kube-state-metrics:
+  serviceAccount:
+    imagePullSecrets:
+    - name: regcred
+  image:
+    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-state-metrics
+    tag: v1.9.5
+
+grafana:
+  image:
+    pullSecrets:
+    - regcred
+    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/grafana
+    tag: 6.6.0
+  sidecar:
+    image: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/k8s-sidecar:0.1.99
+
+prometheus-node-exporter:
+  serviceAccount:
+    imagePullSecrets:
+    - name: regcred
+  image:
+    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/node-exporter
+    tag: v0.18.1
+EOF
+
+
+ubuntu@opsmgr-02:~/charts/stable/prometheus-operator$ helm install prometheus-operator . -f custom-values.yaml
+manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
+manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
+manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
+manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
+manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
+manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
