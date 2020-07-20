@@ -8,6 +8,5 @@ openssl req -x509 -days 365 -key private.key -in private.csr -out loginsight.crt
 
 #useful
 openssl x509 -text -in xxx.crt
-
 # from CRT to PEM
 openssl x509 -in xxx.crt -out xxx.pem -outform PEM
