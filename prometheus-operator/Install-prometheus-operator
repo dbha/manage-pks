@@ -73,21 +73,6 @@ Checking connectivity... done.
 
 ubuntu@opsmgr-02:~$ cd charts/stable/prometheus-operator
 ubuntu@opsmgr-02:~/charts/stable/prometheus-operator$ ls -lrt
-total 176
--rw-rw-r-- 1 ubuntu ubuntu 75084 Jul  6 11:23 README.md
--rw-rw-r-- 1 ubuntu ubuntu    96 Jul  6 11:23 OWNERS
--rw-rw-r-- 1 ubuntu ubuntu   658 Jul  6 11:23 CONTRIBUTING.md
-drwxrwxr-x 2 ubuntu ubuntu  4096 Jul  6 11:23 ci
--rw-rw-r-- 1 ubuntu ubuntu   705 Jul  6 11:23 Chart.yaml
--rw-rw-r-- 1 ubuntu ubuntu   468 Jul  6 11:23 requirements.yaml
--rw-rw-r-- 1 ubuntu ubuntu   457 Jul  6 11:23 requirements.lock
-drwxrwxr-x 3 ubuntu ubuntu  4096 Jul  6 11:23 hack
-drwxrwxr-x 2 ubuntu ubuntu  4096 Jul  6 11:23 crds
-drwxrwxr-x 7 ubuntu ubuntu  4096 Jul  6 11:23 templates
--rw-rw-r-- 1 ubuntu ubuntu 64225 Jul  6 11:23 values.yaml
-
-
-
 
 # Edit requirements.yaml
 ubuntu@opsmgr-02:~/charts/stable/prometheus-operator$ cat requirements.yaml
