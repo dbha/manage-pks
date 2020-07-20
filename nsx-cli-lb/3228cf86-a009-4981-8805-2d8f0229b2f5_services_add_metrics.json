@@ -1,0 +1,30 @@
+{
+  "enabled" : true,
+  "size" : "SMALL",
+  "error_log_level" : "INFO",
+  "access_log_enabled" : false,
+  "virtual_server_ids" : [ "ded8c407-9b9c-47c0-a3ee-76799003273e", "e705d76e-7b17-456d-add8-d8d59e8c6160", "bf46fd51-2c30-48c6-b1f2-b7f2ac33f9b0", "b0274393-595f-4a51-8eca-d190cb6b2d4f" ],
+  "attachment" : {
+    "target_id" : "b6dc6486-566a-4ec7-a9ef-34a38fa366f1",
+    "target_display_name" : "pks-6f6eb3cd-590a-4e81-9ce6-e71ebe660f93-cluster-router",
+    "target_type" : "LogicalRouter",
+    "is_valid" : true
+  },
+  "resource_type" : "LbService",
+  "id" : "3228cf86-a009-4981-8805-2d8f0229b2f5",
+  "display_name" : "lb-pks-6f6eb3cd-590a-4e81-9ce6-e71ebe660f93",
+  "tags" : [ {
+    "scope" : "pks/cluster",
+    "tag" : "6f6eb3cd-590a-4e81-9ce6-e71ebe660f93"
+  }, {
+    "scope" : "ncp/lb_t1_link_ip",
+    "tag" : "100.64.176.5"
+  } ],
+  "_create_user" : "pks-6f6eb3cd-590a-4e81-9ce6-e71ebe660f93",
+  "_create_time" : 1593148580222,
+  "_last_modified_user" : "admin",
+  "_last_modified_time" : 1595201245505,
+  "_system_owned" : false,
+  "_protection" : "REQUIRE_OVERRIDE",
+  "_revision" : 8
+}

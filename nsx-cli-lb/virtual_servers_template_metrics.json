@@ -1,0 +1,16 @@
+{
+  "//pool_id": "Master Pool Member ID"
+  "//application_profile_id": "LbFastTcpProfile(?) ID "
+  "//ip_address": "PKS Master LB IP"
+  "//display_name": "lb-pks-name-virtual-server-metrics"
+
+  "virtual_server": {
+    "ip_protocol": "TCP",
+    "enabled": "true",
+    "pool_id": "",
+    "application_profile_id": "",
+    "ip_address": "",
+    "ports": ["10200", "10251", "10252"],
+    "display_name": ""
+  }
+}
