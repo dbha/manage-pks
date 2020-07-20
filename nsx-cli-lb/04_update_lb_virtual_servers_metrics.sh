@@ -1,8 +1,8 @@
 #!/bin/bash
 
 NSX_HOST=nsxmgr-01.haas-252.pez.pivotal.io
-NSX_ID=admin
-NSX_PASSWORD=aYrPge7db6cmYWDBIt!
+NSX_ID=
+NSX_PASSWORD=a
 
 LB_ID=$1
 FILE=$2

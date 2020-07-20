@@ -4,11 +4,8 @@
 ### 03. create secret for docker-registry
 ### 04. git clone https://github.com/helm/charts.git
 ### 05. Create custom-values.yaml
-### 03. Check Helm CLI
-
-
-
 ### 06. Check Deploy
+### 07. Check Persistent Volume
 #########################################################
 
 ### 01. Push Image in harbor
@@ -173,3 +170,35 @@ manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
 manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
 manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
 manifest_sorter.go:192: info: skipping unknown hook: "crd-install"
+
+
+### 06. Check Deploy
+kubectl get pods
+NAME                                                      READY   STATUS    RESTARTS   AGE
+alertmanager-prometheus-operator-alertmanager-0           2/2     Running   0          2m8s
+prometheus-operator-grafana-895fcb474-tsg8v               2/2     Running   0          2m13s
+prometheus-operator-kube-state-metrics-86666459b6-5s8jw   1/1     Running   0          2m13s
+prometheus-operator-operator-6b556bd579-jpmjh             2/2     Running   0          2m13s
+prometheus-operator-prometheus-node-exporter-llhgj        1/1     Running   0          2m13s
+prometheus-operator-prometheus-node-exporter-mqk4k        1/1     Running   0          2m13s
+prometheus-operator-prometheus-node-exporter-pxsjp        1/1     Running   0          2m13s
+prometheus-prometheus-operator-prometheus-0               3/3     Running   1          118s
+
+kubectl get deployments
+kubectl get deployments
+
+NAME                                     READY   UP-TO-DATE   AVAILABLE   AGE
+prometheus-operator-grafana              1/1     1            1           18m
+prometheus-operator-kube-state-metrics   1/1     1            1           18m
+prometheus-operator-operator             1/1     1            1           18m
+
+
+### 07. Check Deploy
+## Prometheus server data Persistent Volume size
+##
+size: 500Gi
+
+
+## Prometheus data retention period (i.e 360h)
+##
+retention: "365d"
