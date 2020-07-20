@@ -1,0 +1,11 @@
+{
+  "virtual_server": {
+    "ip_protocol": "TCP",
+    "enabled": "true",
+    "pool_id": "799bbaa2-4618-459b-aa48-21ef7103a0c9",
+    "application_profile_id": "6f99b4d7-8b85-53db-956a-4b5255daf032",
+    "ip_address": "10.195.20.153",
+    "ports": ["10200", "10251", "10252"],
+    "display_name": "lb-pks-6f6eb3cd-590a-4e81-9ce6-e71ebe660f93-virtual-server-metrics"
+  }
+}
