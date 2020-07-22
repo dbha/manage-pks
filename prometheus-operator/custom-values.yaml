@@ -34,6 +34,36 @@ prometheus:
       repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus
       tag: v2.17.2
 
+    additionalScrapeConfigs: []
+      - job_name: 'federate'
+        scrape_interval: 15s
+        honor_labels: true
+        metrics_path: '/federate'
+        params:
+          'match[]':
+            - '{job="prometheus"}'
+            - '{__name__=~"job:.*"}'
+        static_configs:
+          - targets:
+              - '172.28.0.3:30491'
+
+#    additionalScrapeConfigs:
+#      - job_name: 'federation'
+#        scrape_interval: 1m
+#        metrics_path: /federate
+#        scrape_timeout: 55s
+#        honor_labels: true
+#        params:
+#          'match[]':
+#            - '{job="kube-state-metrics"}'
+#            - '{job="apiserver"}'
+#            - '{job="kubelet"}'
+#        static_configs:
+#          - targets:
+#              - "172.28.0.3:30491"
+#              - "172.28.1.3:30912"
+
+
 kube-state-metrics:
   serviceAccount:
     imagePullSecrets:

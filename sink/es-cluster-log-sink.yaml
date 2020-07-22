@@ -1,0 +1,14 @@
+apiVersion: pksapi.io/v1beta1
+kind: ClusterLogSink
+metadata:
+  name: es-clusterlogsink
+#  namespace: YOUR-NAMESPACE
+spec:
+  type: es
+  output_properties:
+    Host: 172.16.2.21
+    Port: 9200
+    Index: my_index
+    Type: my_type
+#    tls: on
+#    tls.verify: off

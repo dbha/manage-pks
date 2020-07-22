@@ -11,3 +11,4 @@ quay.io/coreos/prometheus-operator:v0.38.1
 jettech/kube-webhook-certgen:v1.2.0
 kiwigrid/k8s-sidecar:0.1.99
 squareup/ghostunnel:v1.5.2
+k8s.gcr.io/hyperkube:v1.12.1
