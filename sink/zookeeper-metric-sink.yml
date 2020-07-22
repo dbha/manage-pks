@@ -1,0 +1,11 @@
+apiVersion: pksapi.io/v1beta1
+kind: ClusterMetricSink
+metadata:
+  name: dbhatest01
+spec:
+  inputs:
+    - type: zookeeper
+      servers: ["10.195.70.155:2181"]
+  outputs:
+    - type: prometheus_client
+      listen: ":2181"
