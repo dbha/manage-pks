@@ -6,6 +6,7 @@ spec:
   inputs:
     - type: zookeeper
       servers: ["10.195.70.155:2181"]
+#      servers: ["my-release-zookeeper-headless.default:2181"]
   outputs:
     - type: prometheus_client
       listen: ":2181"
