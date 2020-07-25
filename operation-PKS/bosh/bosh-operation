@@ -44,7 +44,7 @@ $ sudo apt install jq
 
 3. ops manager.pem file and credentials
 $om --target https://xxx.xxx.xxx.xxx -u 'admin' -p 'xxxxxx' -k curl -p /api/v0/certificate_authorities -s | jq -r '.certificate_authorities | select(map(.active == true))[0] | .cert_pem' > opsmanager.pem
-$om --target https://opsmgr-02.haas-205.pez.pivotal.io -u 'admin' -p '!Habbi*819' -k curl -p /api/v0/deployed/director/credentials/bosh2_commandline_credentials -s | jq -r '.credential'
+$om --target https://opsmgr-02.xxx.xxx.xxx.xxx -u 'admin' -p '!Habbi*819' -k curl -p /api/v0/deployed/director/credentials/bosh2_commandline_credentials -s | jq -r '.credential'
 
 
 ##### 03. ssh to Bosh #####

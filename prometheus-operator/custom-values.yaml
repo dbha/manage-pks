@@ -4,34 +4,34 @@ global:
 
 prometheusOperator:
   image:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus-operator
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/prometheus-operator
     tag: v0.38.1
   tlsProxy:
     image:
-      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/ghostunnel
+      repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/ghostunnel
       tag: v1.5.2
   prometheusConfigReloaderImage:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus-config-reloader
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/prometheus-config-reloader
     tag: v0.38.1
   configmapReloadImage:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/configmap-reload
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/configmap-reload
     tag: v0.3.0
   admissionWebhooks:
     patch:
       image:
-        repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-webhook-certgen
+        repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/kube-webhook-certgen
         tag: v1.2.0
 
 alertmanager:
   alertmanagerSpec:
     image:
-      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/alertmanager
+      repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/alertmanager
       tag: v0.20.0
 
 prometheus:
   prometheusSpec:
     image:
-      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus
+      repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/prometheus
       tag: v2.17.2
 
     additionalScrapeConfigs: []
@@ -69,22 +69,22 @@ kube-state-metrics:
     imagePullSecrets:
       - name: regcred
   image:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-state-metrics
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/kube-state-metrics
     tag: v1.9.5
 
 grafana:
   image:
     pullSecrets:
       - regcred
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/grafana
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/grafana
     tag: 6.6.0
   sidecar:
-    image: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/k8s-sidecar:0.1.99
+    image: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/k8s-sidecar:0.1.99
 
 prometheus-node-exporter:
   serviceAccount:
     imagePullSecrets:
       - name: regcred
   image:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/node-exporter
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/node-exporter
     tag: v0.18.1

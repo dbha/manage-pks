@@ -648,6 +648,6 @@ ubuntu@opsmgr-02:~/bbr$ cat nohup.out
 ubuntu@opsmgr-02:~/bbr$ pks login -a $PKS_API -u dbha -k
 
 Password: *********
-API Endpoint: api.run.haas-205.pez.pivotal.io
+API Endpoint: api.run.xxx.xxx.xxx.xxx
 User: dbha
 Login successful.

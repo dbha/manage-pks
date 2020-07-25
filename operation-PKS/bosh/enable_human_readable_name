@@ -1,0 +1,121 @@
+
+ubuntu@opsmgr-02:~$ uaac targets
+0   https://api.run.xxx.xxx.xxx.xxx:8443
+1   https://172.16.1.11:8443
+2 * https://opsmgr-02.xxx.xxx.xxx.xxx/uaa
+
+ubuntu@opsmgr-02:~$
+ubuntu@opsmgr-02:~$ uaac target https://opsmgr-02.xxx.xxx.xxx.xxx/uaa
+
+Target: https://opsmgr-02.xxx.xxx.xxx.xxx/uaa
+Context: pks-admin, from client opsman
+
+ubuntu@opsmgr-02:~$ uaac token owner get
+Client ID:  opsman
+Client secret:
+User name:  admin
+Password:  **********
+Unknown key: Max-Age = 172800
+
+Successfully fetched token via owner password grant.
+Target: https://opsmgr-02.xxx.xxx.xxx.xxx/uaa
+Context: admin, from client opsman
+
+ubuntu@opsmgr-02:~$
+
+ubuntu@opsmgr-02:~$ uaac context
+
+[2]*[https://opsmgr-02.xxx.xxx.xxx.xxx/uaa]
+  skip_ssl_validation: true
+
+  [1]*[admin]
+      user_id: 5f3ac0fe-4587-458d-97f8-51bc62e4c08d
+      client_id: opsman
+      access_token: xxxx
+      token_type: bearer
+      refresh_token: xxxxx
+      expires_in: 43199
+      scope: opsman.admin scim.me uaa.admin clients.admin
+      jti: c0b350ad098f4f4da056d5801503757d
+
+ubuntu@opsmgr-02:~$ export TOKEN=xxxx
+ubuntu@opsmgr-02:~$
+
+ubuntu@opsmgr-02:~$ curl -k "https://localhost/api/v0/staged/director/iaas_configurations" -H "Authorization: Bearer $TOKEN"  | jq '.'
+
+{
+  "iaas_configurations": [
+    {
+      "guid": "e9d22751c85e226e2047",
+      "name": "default",
+      "additional_cloud_properties": {},
+      "vcenter_host": "vcsa-01.xxxx.xxxx.xxx.io",
+      "datacenter": "Datacenter",
+      "ephemeral_datastores_string": "LUN01",
+      "persistent_datastores_string": "LUN01",
+      "vcenter_username": "administrator@vsphere.local",
+      "bosh_vm_folder": "pks_vms",
+      "bosh_template_folder": "pks_templates",
+      "bosh_disk_path": "pks_disks",
+      "ssl_verification_enabled": false,
+      "nsx_networking_enabled": true,
+      "disk_type": "thin",
+      "nsx_mode": "nsx-t",
+      "nsx_address": "nsxmgr-01.xxx.xxx.xxxx.xxx",
+
+    }
+  ]
+}
+
+
+
+
+
+
+
+
+curl -k "https://localhost/api/v0/staged/director/iaas_configurations/e9d22751c85e226e2047" -H "Authorization: Bearer $TOKEN" -X PUT   -H "Content-Type: application/json" \
+-d '{
+  "iaas_configurations": [
+    {
+      "guid": "e9d22751c85e226e2047",
+      "name": "default",
+      "vcenter_host": "vcsa-01.xxx.xxx.xxx.xxx",
+      "datacenter": "Datacenter",
+      "ephemeral_datastores_string": "LUN01",
+      "persistent_datastores_string": "LUN01",
+      "vcenter_username": "administrator@vsphere.local",
+      "bosh_vm_folder": "pks_vms",
+      "bosh_template_folder": "pks_templates",
+      "bosh_disk_path": "pks_disks",
+      "ssl_verification_enabled": false,
+      "nsx_networking_enabled": true,
+      "disk_type": "thin",
+      "nsx_mode": "nsx-t",
+      "nsx_address": "nsxmgr-01.xxx.xxx.xxx.xxx",
+    }
+  ],
+  "additional_cloud_properties": {"enable_human_readable_name":true}
+}' -v
+
+< HTTP/1.1 100 Continue
+* We are completely uploaded and fine
+< HTTP/1.1 200 OK
+< Date: Sat, 25 Jul 2020 06:23:45 GMT
+< Content-Type: application/json; charset=utf-8
+< Transfer-Encoding: chunked
+
+
+ubuntu@opsmgr-02:~$ curl -k "https://localhost/api/v0/staged/director/iaas_configurations" -H "Authorization: Bearer $TOKEN"  | jq '.'
+
+{
+  "iaas_configurations": [
+    {
+      "guid": "e9d22751c85e226e2047",
+      "name": "default",
+      "additional_cloud_properties": {
+        "enable_human_readable_name": true
+      },
+      "vcenter_host": "vcsa-01.xxx.xxx.xxx.xxx",
+      "datacenter": "Datacenter",
+

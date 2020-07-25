@@ -17,7 +17,7 @@ v1.9.5: Pulling from coreos/kube-state-metrics
 Digest: sha256:9d29333ad1cc8e14b26e40daea3739cec21b765f6077c6764546779deec3f54b
 Status: Image is up to date for quay.io/coreos/kube-state-metrics:v1.9.5
 quay.io/coreos/kube-state-metrics:v1.9.5
-The push refers to repository [harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-state-metrics]
+The push refers to repository [harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/kube-state-metrics]
 ea9bf440baf1: Layer already exists
 0d1435bd79e4: Layer already exists
 v1.9.5: digest: sha256:9d29333ad1cc8e14b26e40daea3739cec21b765f6077c6764546779deec3f54b size: 738
@@ -25,7 +25,7 @@ v0.20.0: Pulling from prometheus/alertmanager
 Digest: sha256:7e4e9f7a0954b45736d149c40e9620a6664036bb05f0dce447bef5042b139f5d
 Status: Image is up to date for quay.io/prometheus/alertmanager:v0.20.0
 quay.io/prometheus/alertmanager:v0.20.0
-The push refers to repository [harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/alertmanager]
+The push refers to repository [harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/alertmanager]
 .....
 .....
 
@@ -48,7 +48,7 @@ NAME                                   STATUS   ROLES    AGE     VERSION
 #kubectl create secret docker-registry regcred --docker-server=<your-registry-server>  \
 #--docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
 
-kubectl create secret docker-registry regcred --docker-server=harbor.run.haas-205.pez.pivotal.io  \
+kubectl create secret docker-registry regcred --docker-server=harbor.run.xxx.xxx.xxx.xxx  \
 --docker-username=xxxx --docker-password='xxxxx' --docker-email=xxxxxxxx
 
 
@@ -106,34 +106,34 @@ global:
 
 prometheusOperator:
   image:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus-operator
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/prometheus-operator
     tag: v0.38.1
   tlsProxy:
     image:
-      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/ghostunnel
+      repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/ghostunnel
       tag: v1.5.2
   prometheusConfigReloaderImage:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus-config-reloader
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/prometheus-config-reloader
     tag: v0.38.1
   configmapReloadImage:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/configmap-reload
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/configmap-reload
     tag: v0.3.0
   admissionWebhooks:
      patch:
        image:
-         repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-webhook-certgen
+         repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/kube-webhook-certgen
          tag: v1.2.0
 
 alertmanager:
   alertmanagerSpec:
     image:
-      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/alertmanager
+      repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/alertmanager
       tag: v0.20.0
 
 prometheus:
   prometheusSpec:
     image:
-      repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/prometheus
+      repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/prometheus
       tag: v2.17.2
 
 kube-state-metrics:
@@ -141,24 +141,24 @@ kube-state-metrics:
     imagePullSecrets:
     - name: regcred
   image:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/kube-state-metrics
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/kube-state-metrics
     tag: v1.9.5
 
 grafana:
   image:
     pullSecrets:
     - regcred
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/grafana
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/grafana
     tag: 6.6.0
   sidecar:
-    image: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/k8s-sidecar:0.1.99
+    image: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/k8s-sidecar:0.1.99
 
 prometheus-node-exporter:
   serviceAccount:
     imagePullSecrets:
     - name: regcred
   image:
-    repository: harbor.run.haas-205.pez.pivotal.io/dbha/monitoring/node-exporter
+    repository: harbor.run.xxx.xxx.xxx.xxx/dbha/monitoring/node-exporter
     tag: v0.18.1
 EOF
 

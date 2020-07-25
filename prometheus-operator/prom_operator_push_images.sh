@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJECT=dbha
-REGISTRY=harbor.run.haas-205.pez.pivotal.io
+REGISTRY=harbor.run.xxx.xxx.xxx.xxx
 
 FILE=$1
 echo $FILE
