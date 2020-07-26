@@ -1,3 +1,4 @@
+# https://bosh.io/docs/vsphere-human-readable-names/#more-about-human-readable-names
 # https://docs.pivotal.io/pivotalcf/2-5/opsman-api/#creating-iaas-configurations
 
 ubuntu@opsmgr-02:~$ uaac targets
