@@ -1,3 +1,4 @@
+# https://docs.pivotal.io/pivotalcf/2-5/opsman-api/#creating-iaas-configurations
 
 ubuntu@opsmgr-02:~$ uaac targets
 0   https://api.run.xxx.xxx.xxx.xxx:8443
@@ -68,12 +69,6 @@ ubuntu@opsmgr-02:~$ curl -k "https://localhost/api/v0/staged/director/iaas_confi
 }
 
 
-
-
-
-
-
-
 curl -k "https://localhost/api/v0/staged/director/iaas_configurations/e9d22751c85e226e2047" -H "Authorization: Bearer $TOKEN" -X PUT   -H "Content-Type: application/json" \
 -d '{
   "iaas_configurations": [
@@ -119,3 +114,6 @@ ubuntu@opsmgr-02:~$ curl -k "https://localhost/api/v0/staged/director/iaas_confi
       "vcenter_host": "vcsa-01.xxx.xxx.xxx.xxx",
       "datacenter": "Datacenter",
 
+
+# recreate director vm In Opsman UI
+opsman > director tile > director config > check `recreate-vm'
