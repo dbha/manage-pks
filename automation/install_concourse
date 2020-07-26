@@ -1,0 +1,81 @@
+# concourse
+https://docs.pivotal.io/p-concourse/v6/installation/install-concourse-bosh/
+
+# credhub-uaa
+https://bosh.io/releases/github.com/pivotal-cf/credhub-release?all=1
+
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/credhub$ bosh releases
+Using environment '172.16.1.150' as client 'admin'
+
+Name                    Version  Commit Hash
+backup-and-restore-sdk  1.15.0*  a986a19
+bpm                     1.1.8*   3bf872b
+~                       1.1.5    98f635b
+concourse               6.4.0*   2af3aa7
+credhub                 2.6.0    0f42dac
+~                       2.5.7    24bad04
+postgres                41*      b2b657d
+~                       39       edd41c0
+uaa                     74.9.0   b5f5236
+
+(*) Currently deployed
+(+) Uncommitted changes
+
+9 releases
+
+Succeeded
+
+
+bosh upload-release --sha1 c45af16ed393bb3cf061b8749e3ee4cae74ce995 https://bosh.io/d/github.com/pivotal-cf/credhub-release?v=2.6.0
+
+
+https://docs.pivotal.io/p-concourse/v6/advanced/integrate-credhub-uaa-bosh/
+
+
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main$ bosh upload-release --sha1 c45af16ed393bb3cf061b8749e3ee4cae74ce995 https://bosh.io/d/github.com/pivotal-cf/credhub-release?v=2.6.0
+Using environment '172.16.1.150' as client 'admin'
+
+Task 26
+
+
+
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/credhub$ cat credhub-vars.yml
+---
+deployment-network: default
+external-ip-address: "credhub.pksdemo.net"   <- <- Require DNS access
+internal-ip-address: "172.16.1.152"
+db_host: localhost
+db_port: 5432
+uaa_external_url: "https://credhub.pksdemo.net:8443"  <- <- Require DNS access
+uaa_internal_url: "https://172.16.1.152:8443"
+uaa_version: "74.9.0"
+uaa_sha1: "9647fff0fcb249e71ba2290849b4cdbbf7550165"
+credhub_version: "2.5.7"
+credhub_sha1: "9647fff0fcb249e71ba2290849b4cdbbf7550165"
+postgres_version: "39"
+postgres_sha1: "8ff395540e77a461322a01c41aa68973c10f1ffb"
+bpm_version: "1.1.5"
+bpm_sha1: "e612e88543012ae5d376dd3746159d5abe748076"
+
+
+
+# Make concourse-credhub-vars.yml
+bosh int ./credhub-vars-store.yml --path=/concourse_credhub_client_secret
+
+credhub_url: "https://credhub.pksdemo.net"
+credhub_client_id: "concourse_client"
+credhub_client_secret: xxxxx
+credhub_ca_cert: |
+  -----BEGIN CERTIFICATE-----
+  MIIEZDCCAsygAwIBAgIRANeXy1u5i5Wn6Tnf42AzOgAwDQYJKoZIhvcNAQELBQAw
+  OzEMMAoGA1UEBhMDVVNBMRYwFAYDVQQKEw1DbG91ZCBGb3VuZHJ5MRMwEQYDVQQD
+  EwpDcmVkSHViIENBMB4XDTIwMDcyNjA2MTcxMloXDTIxMDcyNjA2MTcxMlowOzEM
+  MAoGA1UEBhMDVVNBMRYwFAYDVQQKEw1DbG91ZCBGb3VuZHJ5MRMwEQYDVQQDEwpD
+  cmVkSHViIENBMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAsJj76hTL
+  ....
+  IO4elSkngJE5tZmNncetumAr7MiqWJwbEQTyXCNroFzelbFlvSG7u+lX1a1qSpHz
+  3TcAWYtcByZJOZ5RjvyUkdPjjRGim6jL/m4LI0UDAwF0x8zrJGocLyuHve6Iotm2
+  P3wnFxfTtLhyiADlUUuLhv7KlhDU+9DF
+  -----END CERTIFICATE-----
+
+
