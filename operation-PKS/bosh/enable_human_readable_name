@@ -1,5 +1,7 @@
 # https://bosh.io/docs/vsphere-human-readable-names/#more-about-human-readable-names
+# https://docs.pivotal.io/pivotalcf/2-5/customizing/opsman-users.html
 # https://docs.pivotal.io/pivotalcf/2-5/opsman-api/#creating-iaas-configurations
+
 
 ubuntu@opsmgr-02:~$ uaac targets
 0   https://api.run.xxx.xxx.xxx.xxx:8443
