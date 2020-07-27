@@ -1,0 +1,8 @@
+credhub_url: "https://credhub.pksdemo.net:8844"
+credhub_client_id: "concourse_client"
+credhub_client_secret: xxxxxx
+credhub_ca_cert: |
+  -----BEGIN CERTIFICATE-----
+
+
+  -----END CERTIFICATE-----

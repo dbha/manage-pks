@@ -2,3 +2,8 @@
 #https://docs.pivotal.io/p-concourse/v5/advanced/integrate-credhub-uaa-bosh/#deploy-credhub-uaa
 #https://github.com/myminseok/pivotal-docs/blob/master/concourse-pivotal.md
 
+Concourse Release
+#https://bosh.io/releases/github.com/concourse/concourse-bosh-release?all=1
+
+bosh upload-release --sha1 98fa62d0ef61c9886b824f132189c838f278e7e6 \
+  https://bosh.io/d/github.com/concourse/concourse-bosh-release?v=6.4.0
