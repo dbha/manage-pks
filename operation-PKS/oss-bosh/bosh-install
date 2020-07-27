@@ -76,3 +76,11 @@ bosh/0:~# ping 8.8.8.8
 PING 8.8.8.8 (8.8.8.8) 56(84) bytes of data.
 64 bytes from 8.8.8.8: icmp_seq=1 ttl=115 time=5.83 ms
 64 bytes from 8.8.8.8: icmp_seq=2 ttl=115 time=5.86 ms
+
+bosh/0:~$ cat /etc/resolv.conf
+nameserver 10.192.2.10
+nameserver 10.192.2.11
+
+
+# Change runtime-config
+bosh update-runtime-config ./bosh-deployment/runtime-config/runtime-configs/dns.yml
