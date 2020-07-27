@@ -1,0 +1,70 @@
+azs:
+  - name: pks-az1
+    cloud_properties:
+      datacenters:
+        - clusters: [Cluster: {}]
+
+vm_types:
+  - name: default
+    cloud_properties:
+      cpu: 2
+      ram: 1024
+      disk: 30_000
+  - name: medium
+    cloud_properties:
+      cpu: 2
+      ram: 4096
+      disk: 8_240
+  - name: medium.disk
+    cloud_properties:
+      cpu: 2
+      ram: 4096
+      disk: 30_240
+
+  - name: xlarge.disk
+    cloud_properties:
+      cpu: 4
+      ram: 16384
+      disk: 30_240
+
+disk_types:
+  - name: default
+    disk_size: 3000
+  - name: large
+    disk_size: 50_000
+
+  - name: 10240
+    disk_size: 10_240
+
+  - name: xlarge.disk
+    disk_size: 10_240
+
+
+networks:
+  - name: default
+    type: manual
+    subnets:
+      - range: 172.16.1.0/24
+        gateway: 172.16.1.1
+        azs: [pks-az1]
+        dns: [10.192.2.10,10.192.2.11]
+        reserved: [172.16.1.1-172.16.1.99]
+        cloud_properties:
+          name: PKS-Infrastructure
+        static:
+          - 172.16.1.151
+          - 172.16.1.152
+          - 172.16.1.153
+          - 172.16.1.162
+
+compilation:
+  workers: 5
+  reuse_compilation_vms: true
+  az: pks-az1
+  vm_type: default
+  network: default
+
+vm_extensions:
+  - cloud_properties:
+      disk: 102400
+    name: 100GB_ephemeral_disk
