@@ -1,0 +1,129 @@
+#login concourse
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly -t pez login -c http://concourse.cp.pksdemo.net -u xxxx -p xxxx -k
+logging in to team 'main'
+
+
+target saved
+
+# get targets
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly targets
+name  url                               team  expiry
+pez   http://concourse.cp.pksdemo.net   main  Tue, 28 Jul 2020 23:01:22 UTC
+test  https://concourse.cp.pksdemo.net  main  n/a: Token is expired
+
+# get pipelines
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly -t pez pipelines
+name           paused  public  last updated
+hello-credhub  no      no      2020-07-26 10:13:59 +0000 UTC
+
+
+# delete target
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly delete-target -t test
+deleted target: test
+
+
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly -t pez pipelines
+name           paused  public  last updated
+hello-credhub  no      no      2020-07-26 10:13:59 +0000 UTC
+
+# get pipelines
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly -t pez pipelines  get-pipeline
+name           paused  public  last updated
+hello-credhub  no      no      2020-07-26 10:13:59 +0000 UTC
+
+
+# delete-pipeline
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly -t pez dp -p hello-credhub
+!!! this will remove all data for pipeline `hello-credhub`
+
+are you sure? [yN]: y
+`hello-credhub` deleted
+
+
+#####
+
+
+# connect credhub
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/credhub$ cat login_credhub.sh
+
+#bosh int ./credhub-vars-store.yml --path=/credhub-ca/ca > credhub-ca.ca
+#credhub api --server=https://credhub.pksdemo.net:8844 --ca-cert=./credhub-ca.ca
+#credhub login  --client-name=concourse_client --client-secret=$(bosh int ./credhub-vars-store.yml --path=/concourse_credhub_client_secret)
+
+##########
+
+#export CREDHUB_CLIENT=172.16.1.152
+bosh int ./credhub-vars-store.yml --path=/credhub-ca/ca > credhub-ca.ca
+
+#credhub api --server=https://credhub.pksdemo.net:8844 --ca-cert=./credhub-ca.ca
+credhub login --client-name=concourse_client --server=https://credhub.pksdemo.net:8844 --ca-cert=./credhub-ca.ca --client-secret=$(bosh int ./credhub-vars-store.yml --path=/concourse_credhub_client_secret)
+
+#####
+
+# set values in Credhub
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example$ cat set_credhub.sh
+#!/bin/bash
+
+source ./login_credhub.sh
+PIPELINE_NAME=hello-pipeline
+PREFIX='/concourse/main'
+
+credhub set -t value -n /concourse/main/hello-credhub/hello -v test
+#credhub set -t value -n /concourse/main/s3_access_key_id -v 'xxxxxxxx'
+
+
+# set values in Credhub
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example$ credhub set -t value -n /concourse/main/hello-credhub/hello -v test
+id: 458ac336-1ea0-4667-9c85-671e050cdd70
+name: /concourse/main/hello-credhub/hello
+type: value
+value: <redacted>
+version_created_at: "2020-07-27T23:47:22Z"
+
+
+# find credhub
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example$ credhub find
+credentials:
+- name: /concourse/main/hello-credhub/hello
+  version_created_at: "2020-07-27T23:52:32Z"
+
+# get value in credhub
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example$ credhub get -n /concourse/main/hello-credhub/hello
+id: a5ad3328-17b8-4686-89b8-ca7db7e6f1e8
+name: /concourse/main/hello-credhub/hello
+type: value
+value: test
+version_created_at: "2020-07-27T23:52:32Z"
+
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example$
+
+
+# set pipeline
+ubuntu@opsmgr-02:~/cp-pks/cp-pks-bosh/bosh-1/concourse-main/pipeline-example/hello-credhub$ fly -t pez sp -p hello-credhub -c ./hello-credhub.yml
+jobs:
+  job hello-credhub has been added:
++ name: hello-credhub
++ plan:
++ - do:
++   - config:
++       image_resource:
++         source:
++           repository: ubuntu
++         type: docker-image
++       platform: linux
++       run:
++         args:
++         - -exc
++         - |
++           echo "Hello $WORLD_PARAM"
++         path: sh
++     params:
++       WORLD_PARAM: ((hello))
++     task: hello-credhub
+
+apply configuration? [yN]: y
+pipeline created!
+you can view your pipeline here: http://concourse.cp.pksdemo.net/teams/main/pipelines/hello-credhub
+
+
+
