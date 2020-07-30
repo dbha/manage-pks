@@ -1,4 +1,8 @@
-ubuntu@opsmgr-02:~/yaml/minio$ helm get manifest minio
+#ubuntu@opsmgr-02:~/yaml/minio$ helm fetch bitnami/minio
+#ubuntu@opsmgr-02:~/yaml/minio$ h elm install minio -f minio-values.yaml ./minio
+#ubuntu@opsmgr-02:~/yaml/minio$ helm get manifest minio
+
+
 ---
 # Source: minio/templates/serviceaccount.yaml
 apiVersion: v1
@@ -27,8 +31,8 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 type: Opaque
 data:
-  access-key: "xxxxxx"
-  secret-key: "xxxxxx"
+  access-key: "xxx"
+  secret-key: "xxx"
 ---
 # Source: minio/templates/service.yaml
 apiVersion: v1
@@ -52,9 +56,31 @@ spec:
     app.kubernetes.io/name: minio
     app.kubernetes.io/instance: minio
 ---
-# Source: minio/templates/deployment-standalone.yaml
+# Source: minio/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-headless
+  namespace: default
+  labels:
+    app.kubernetes.io/name: minio
+    helm.sh/chart: minio-3.4.21
+    app.kubernetes.io/instance: minio
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: minio
+      port: 9000
+      targetPort: minio
+  selector:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: minio
+---
+# Source: minio/templates/statefulset.yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: minio
   namespace: default
@@ -64,12 +90,15 @@ metadata:
     app.kubernetes.io/instance: minio
     app.kubernetes.io/managed-by: Helm
 spec:
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: minio
       app.kubernetes.io/instance: minio
+  serviceName: minio-headless
+  replicas: 4
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -78,7 +107,7 @@ spec:
         app.kubernetes.io/instance: minio
         app.kubernetes.io/managed-by: Helm
       annotations:
-        checksum/credentials-secret: d2af789a898cc885a18a69cde9f688ee016ecf228c83088323370483318c1201
+        checksum/credentials-secret: 98b36efd27c6ed32228bf50ae5e80f13c9e138eeb857fea90d108dad9cf1ced0
     spec:
       serviceAccountName: minio
 
@@ -93,6 +122,12 @@ spec:
           env:
             - name: BITNAMI_DEBUG
               value: "false"
+            - name: MINIO_DISTRIBUTED_MODE_ENABLED
+              value: "yes"
+            - name: MINIO_SKIP_CLIENT
+              value: "yes"
+            - name: MINIO_DISTRIBUTED_NODES
+              value: minio-0.minio-headless.default.svc.cluster.local,minio-1.minio-headless.default.svc.cluster.local,minio-2.minio-headless.default.svc.cluster.local,minio-3.minio-headless.default.svc.cluster.local,
             - name: MINIO_FORCE_NEW_KEYS
               value: "no"
             - name: MINIO_ACCESS_KEY
@@ -124,7 +159,7 @@ spec:
           readinessProbe:
             initialDelaySeconds: 5
             periodSeconds: 5
-            timeoutSeconds: 1
+            timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 5
             tcpSocket:
@@ -133,7 +168,7 @@ spec:
             limits: {}
             requests: {}
           volumeMounts:
-            - name: "data"
+            - name: data
               mountPath: /data
       volumes:
         - name: data
