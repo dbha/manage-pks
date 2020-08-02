@@ -39,5 +39,5 @@ pushd $TMP_DIR
 
 popd
 
-export BACKUP_FILE="${BOSH_ENVIRONMENT}_pks_control_plane-backup_${current_date}.tgz"
+export BACKUP_FILE="${BOSH_ENVIRONMENT}_pks_all_cluster-backup_${current_date}.tgz"
 tar -zcvf $WORK_DIR/$BACKUP_FILE -C $TMP_DIR . --remove-files
