@@ -1,2 +1,6 @@
-.idea/
-issue/
+.idea
+.project
+.classpath
+*.iml
+.idea
+.issue
