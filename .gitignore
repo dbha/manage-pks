@@ -2,4 +2,5 @@
 .project
 .classpath
 *.iml
-.issue/*
+issue/*
+.gitignore
