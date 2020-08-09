@@ -64,6 +64,7 @@
     65475fb7f7c6df9d, started, 377482a0-4687-4b97-82d5-670dac2ed94e, https://master-1.etcd.cfcr.internal:2380, https://master-1.etcd.cfcr.internal:2379
     
     -> remove member (장애난 노드)
+    master/5f5eb080-c238-4e81-8073-ecc63ce98cee:/var/vcap/store/etcd# export ETCDCTL_API=3
     master/5f5eb080-c238-4e81-8073-ecc63ce98cee:/var/vcap/store/etcd# etcdctl member remove 18ac61d8503c2eb
     Member  18ac61d8503c2eb removed from cluster 6d938e3be5102340
     
