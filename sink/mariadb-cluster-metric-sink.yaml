@@ -1,0 +1,13 @@
+apiVersion: pksapi.io/v1beta1
+kind: ClusterMetricSink
+metadata:
+  name: mariadb-cluster-metric-sink
+spec:
+  inputs:
+    - type: prometheus
+      urls: [
+        "http://10.100.200.28:9104/metrics"   #Service IP
+      ]
+  outputs:
+    - type: prometheus_client
+      listen: ":9104"

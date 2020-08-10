@@ -1,0 +1,13 @@
+apiVersion: pksapi.io/v1beta1
+kind: ClusterMetricSink
+metadata:
+  name: dbhatest01
+spec:
+  inputs:
+  - type: prometheus
+    urls: [
+      "http://10.100.200.95:9113/metrics"
+    ]
+  outputs:
+  - type: prometheus_client
+    listen: ":9113"
