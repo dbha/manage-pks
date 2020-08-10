@@ -1,7 +1,7 @@
 apiVersion: pksapi.io/v1beta1
 kind: ClusterMetricSink
 metadata:
-  name: dbhatest01
+  name: nginx-cluster-metric-sink
 spec:
   inputs:
   - type: prometheus
