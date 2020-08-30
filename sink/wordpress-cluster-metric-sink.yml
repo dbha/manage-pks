@@ -1,13 +1,13 @@
 apiVersion: pksapi.io/v1beta1
 kind: ClusterMetricSink
 metadata:
-  name: nginx-cluster-metric-sink
+  name: wordpress-cluster-metric-sink
 spec:
   inputs:
     - type: prometheus
       urls:
-        #    - "http://localhost:9113/metrics"
-        - "http://nginx-svc.nginx:9113/metrics"
+        - "http://wordpress-svc.default:9117/metrics"
+
   outputs:
     - type: prometheus_client
-      listen: ":9113"
+      listen: ":9117"
