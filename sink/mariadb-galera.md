@@ -100,6 +100,16 @@
       - targets:
         - "172.28.3.5:9104"
         - "172.28.3.7:9104"
+    Or
+    job_name: cluster_worker_mariadb-telegraf
+    metrics_path: "/metrics"
+    scheme: http
+    dns_sd_configs:
+      - names:
+          - q-s4.worker.*.*.bosh.
+        type: A
+        port: 9104    
+        
 
 ##### 10. Metric 확인
     -> grafana 접속후 mysql_global_status_wsrep_cluster_size 로 확인
