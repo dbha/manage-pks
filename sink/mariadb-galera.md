@@ -1,5 +1,9 @@
 ##### mariadb-galera 배포후 ClusterMetricSink 생성   
 
+##### Image
+    bitnami/mariadb-galera:10.5.4-debian-10-r20
+    bitnami/mysqld-exporter:0.12.1-debian-10-r179
+
 ##### 01. mariadb-galera 배포를 위한 repo add   
     ubuntu@opsmgr-02:~/yaml/nginx$ helm repo add bitnami-ibm https://charts.bitnami.com/ibm
     "bitnami-ibm" has been added to your repositories
